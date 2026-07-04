@@ -237,13 +237,13 @@ body:not(.view-app) .wrap{display:none!important}
 .sp-line{height:3px;background:var(--line);flex:1;margin:19px -4px 0}
 .sp-line.done{background:var(--crimson)}
 .status-info{border-top:1px solid var(--line);padding-top:8px}
+.status-prep{margin-bottom:22px}
 .si-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line)}
 .si-row span{color:var(--muted);font-size:13.5px;font-weight:600}
 .si-row b{font-size:15px;color:var(--ink)}
 .si-row b.ltr{direction:ltr}
 .si-updated{text-align:center;color:var(--muted);font-size:12.5px;margin-top:16px}
-.status-lang{margin-top:18px;background:rgba(255,255,255,.12)}
-.icon-btn.wa{color:#25D366;border-color:#B9EBC9}
+.status-lang{margin-top:18px;background:rgba(255,255,255,.12)}.icon-btn.wa{color:#25D366;border-color:#B9EBC9}
 .icon-btn.wa:hover{background:#25D366;color:#fff;border-color:#25D366}
 
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.stat.s-money{grid-column:span 2}}
@@ -499,6 +499,7 @@ const I18N={
     status:"שלב", passportExpiry:"תוקף דרכון", amount:"סכום (₪)", payStatus:"תשלום",
     receivedLabel:"תאריך קבלה", readyLabel:"צפי הכנה (כ-15 יום)",
     prepLabel:"הכנה", prepDaysLeft:"ימים נותרו", prepDue:"הגיע צפי ההכנה", prepReady:"מוכן",
+    statusReadyEst:"צפי לאיסוף",
     paid:"שולם", unpaid:"לא שולם", notes:"הערות", notesPh:"הערות פנימיות...",
     cancel:"ביטול", save:"שמירה",
     st_new:"חדש", st_progress:"בטיפול", st_embassy:"בשגרירות", st_ready:"מוכן",
@@ -543,6 +544,7 @@ const I18N={
     status:"المرحلة", passportExpiry:"صلاحية الجواز", amount:"المبلغ (₪)", payStatus:"الدفع",
     receivedLabel:"تاريخ الاستلام", readyLabel:"الجاهزية المتوقعة (~15 يوم)",
     prepLabel:"التحضير", prepDaysLeft:"يوم متبقٍ", prepDue:"حان موعد الجاهزية", prepReady:"جاهز",
+    statusReadyEst:"الموعد المتوقع للاستلام",
     paid:"مدفوع", unpaid:"غير مدفوع", notes:"ملاحظات", notesPh:"ملاحظات داخلية...",
     cancel:"إلغاء", save:"حفظ",
     st_new:"جديد", st_progress:"قيد المعالجة", st_embassy:"في السفارة", st_ready:"جاهز",
@@ -1122,7 +1124,7 @@ function waPhone(p){
 }
 function shareStatus(id){
   const c=clients.find(x=>x.id===id);if(!c)return;
-  const data={n:c.name,p:c.passport,s:c.status,l:lang,d:new Date().toISOString().slice(0,10)};
+  const data={n:c.name,p:c.passport,s:c.status,l:lang,d:new Date().toISOString().slice(0,10),rc:c.received||"",re:c.readyEstimate||""};
   const link=location.href.split("#")[0]+"#s="+b64(JSON.stringify(data));
   const msg=lang==="ar"
     ? "مرحباً "+c.name+"، لمتابعة حالة طلب تأشيرة الصين:\n"+link
@@ -1150,6 +1152,13 @@ function renderStatus(d){
   document.getElementById("statusBody").innerHTML=`
     <div class="status-current"><span class="cur-badge" style="background:${stColors[d.s]}">${t("st_"+d.s)}</span></div>
     <div class="status-pipe">${steps}</div>
+    ${d.re?(()=>{
+      const pr=prepProgress({received:d.rc,readyEstimate:d.re,status:d.s});
+      const info=d.s==="ready"?t("prepReady"):(pr?(pr.daysLeft<0?t("prepDue"):pr.daysLeft+" "+t("prepDaysLeft")):"");
+      const bar=pr?`<div class="prep-bar"><div class="prep-fill ${pr.cls}" style="width:${pr.pct}%"></div></div>`:"";
+      return `<div class="status-prep">
+        <div class="prep-head"><span>⏳ ${t("statusReadyEst")}: ${fmtDate(d.re)}</span><span>${info}</span></div>
+        ${bar}</div>`;})():""}
     <div class="status-info">
       <div class="si-row"><span>${t("fullName")}</span><b>${esc(d.n)}</b></div>
       <div class="si-row"><span>${t("passportNum")}</span><b class="ltr">${esc(d.p||"—")}</b></div>
