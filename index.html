@@ -116,6 +116,14 @@ input,select,textarea{font-family:inherit;font-size:15px}
 
 .card-notes{padding:0 16px 12px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .card-expiry{padding:0 16px 12px;margin-top:-4px}
+.card-prep{padding:0 16px 12px}
+.prep-head{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.prep-bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden}
+.prep-fill{height:100%;border-radius:6px;transition:width .3s}
+.prep-fill.prep-mid{background:var(--gold)}
+.prep-fill.prep-soon{background:var(--warn)}
+.prep-fill.prep-late{background:var(--crimson)}
+.prep-fill.prep-done{background:var(--ok)}
 .expiry-flag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:7px}
 .expiry-ok{background:var(--ok-bg);color:var(--ok)}
 .expiry-warn{background:var(--warn-bg);color:var(--warn)}
@@ -447,6 +455,16 @@ body:not(.view-app) .wrap{display:none!important}
           </select>
         </div>
       </div>
+      <div class="row2">
+        <div class="field ltr">
+          <label data-t="receivedLabel">תאריך קבלה</label>
+          <input id="f_received" type="date" onchange="autoReady()">
+        </div>
+        <div class="field ltr">
+          <label data-t="readyLabel">צפי הכנה (כ-15 יום)</label>
+          <input id="f_ready" type="date">
+        </div>
+      </div>
       <div class="field">
         <label data-t="notes">הערות</label>
         <textarea id="f_notes" rows="2" data-ph="notesPh" placeholder="הערות פנימיות..."></textarea>
@@ -479,6 +497,8 @@ const I18N={
     passportPhoto:"צילום דרכון", personalPhoto:"תמונה אישית", tapUpload:"לחץ להעלאה",
     fullName:"שם מלא", fullNamePh:"שם הנוסע", passportNum:"מספר דרכון", phone:"טלפון",
     status:"שלב", passportExpiry:"תוקף דרכון", amount:"סכום (₪)", payStatus:"תשלום",
+    receivedLabel:"תאריך קבלה", readyLabel:"צפי הכנה (כ-15 יום)",
+    prepLabel:"הכנה", prepDaysLeft:"ימים נותרו", prepDue:"הגיע צפי ההכנה", prepReady:"מוכן",
     paid:"שולם", unpaid:"לא שולם", notes:"הערות", notesPh:"הערות פנימיות...",
     cancel:"ביטול", save:"שמירה",
     st_new:"חדש", st_progress:"בטיפול", st_embassy:"בשגרירות", st_ready:"מוכן",
@@ -521,6 +541,8 @@ const I18N={
     passportPhoto:"صورة الجواز", personalPhoto:"صورة شخصية", tapUpload:"اضغط للرفع",
     fullName:"الاسم الكامل", fullNamePh:"اسم المسافر", passportNum:"رقم الجواز", phone:"الهاتف",
     status:"المرحلة", passportExpiry:"صلاحية الجواز", amount:"المبلغ (₪)", payStatus:"الدفع",
+    receivedLabel:"تاريخ الاستلام", readyLabel:"الجاهزية المتوقعة (~15 يوم)",
+    prepLabel:"التحضير", prepDaysLeft:"يوم متبقٍ", prepDue:"حان موعد الجاهزية", prepReady:"جاهز",
     paid:"مدفوع", unpaid:"غير مدفوع", notes:"ملاحظات", notesPh:"ملاحظات داخلية...",
     cancel:"إلغاء", save:"حفظ",
     st_new:"جديد", st_progress:"قيد المعالجة", st_embassy:"في السفارة", st_ready:"جاهز",
@@ -762,6 +784,8 @@ function openModal(id){
   document.getElementById("f_phone").value=c?c.phone:"";
   document.getElementById("f_status").value=c?c.status:"new";
   document.getElementById("f_expiry").value=c?c.expiry:"";
+  document.getElementById("f_received").value=c?(c.received||""):"";
+  document.getElementById("f_ready").value=c?(c.readyEstimate||""):"";
   document.getElementById("f_amount").value=c?c.amount:550;
   document.getElementById("f_paid").value=c?String(c.paid):"false";
   document.getElementById("f_notes").value=c?c.notes:"";
@@ -772,6 +796,14 @@ function openModal(id){
   document.getElementById("overlay").classList.add("open");
 }
 function closeModal(){document.getElementById("overlay").classList.remove("open");}
+function autoReady(){
+  const r=document.getElementById("f_received").value;
+  const ready=document.getElementById("f_ready");
+  if(r&&!ready.value){
+    const d=new Date(r);d.setDate(d.getDate()+15);
+    ready.value=d.toISOString().slice(0,10);
+  }
+}
 async function uploadPhoto(clientId,type,dataUrl){
   if(!dataUrl)return null;
   if(!dataUrl.startsWith("data:"))return dataUrl; // already a stored URL
@@ -796,6 +828,8 @@ async function saveClient(){
     phone:document.getElementById("f_phone").value.trim(),
     status:document.getElementById("f_status").value,
     expiry:document.getElementById("f_expiry").value,
+    received:document.getElementById("f_received").value,
+    readyEstimate:document.getElementById("f_ready").value,
     amount:Number(document.getElementById("f_amount").value)||0,
     paid:document.getElementById("f_paid").value==="true",
     notes:document.getElementById("f_notes").value.trim()
@@ -862,6 +896,21 @@ function render(){
   grid.innerHTML=list.map(cardHTML).join("");
 }
 
+function prepProgress(c){
+  if(!c.received||!c.readyEstimate)return null;
+  const start=new Date(c.received).getTime();
+  const end=new Date(c.readyEstimate).getTime();
+  const now=Date.now();
+  if(!(end>start))return null;
+  let pct=Math.round((now-start)/(end-start)*100);
+  pct=Math.max(0,Math.min(100,pct));
+  const daysLeft=Math.ceil((end-now)/86400000);
+  let cls="prep-mid";
+  if(c.status==="ready"){pct=100;cls="prep-done";}
+  else if(daysLeft<0)cls="prep-late";
+  else if(daysLeft<=3)cls="prep-soon";
+  return{pct,daysLeft,cls};
+}
 function cardHTML(c){
   const stepIdx=STATUSES.indexOf(c.status);
   const pipeline=STATUSES.map((s,i)=>`
@@ -891,6 +940,12 @@ function cardHTML(c){
     </div>
     <div class="pipeline">${pipeline}</div>
     ${exp?`<div class="card-expiry"><span class="expiry-flag ${exp.cls}">${exp.ic} ${exp.txt}${c.expiry?" · "+fmtDate(c.expiry):""}</span></div>`:""}
+    ${(()=>{const pr=prepProgress(c);if(!pr)return"";
+      const info=c.status==="ready"?t("prepReady"):pr.daysLeft<0?t("prepDue"):pr.daysLeft+" "+t("prepDaysLeft");
+      return `<div class="card-prep">
+        <div class="prep-head"><span>⏳ ${t("prepLabel")}</span><span>${info}${c.readyEstimate?" · "+fmtDate(c.readyEstimate):""}</span></div>
+        <div class="prep-bar"><div class="prep-fill ${pr.cls}" style="width:${pr.pct}%"></div></div>
+      </div>`;})()}
     ${c.notes?`<div class="card-notes">📝 ${esc(c.notes)}</div>`:""}
     ${advBtn}
     <div class="card-foot">
