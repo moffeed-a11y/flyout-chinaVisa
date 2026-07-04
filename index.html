@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול ויזה לסין</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --crimson:#C1272D;
+  --crimson-dark:#8E1B20;
+  --navy:#16233B;
+  --navy-2:#22355A;
+  --gold:#C99A3B;
+  --cream:#F7F4EE;
+  --paper:#FFFFFF;
+  --ink:#1B2433;
+  --muted:#6B7280;
+  --line:#E6E1D8;
+  --ok:#1E8E5A;
+  --ok-bg:#E4F4EC;
+  --warn:#C77700;
+  --warn-bg:#FBEFD9;
+  --shadow:0 1px 3px rgba(22,35,59,.08),0 8px 24px rgba(22,35,59,.06);
+  --font:'Heebo',system-ui,sans-serif;
+}
+html[data-lang="ar"]{--font:'Cairo',system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--cream);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:15px}
+
+/* ---------- Header ---------- */
+.topbar{background:var(--navy);color:#fff;position:sticky;top:0;z-index:40;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-badge{width:44px;height:44px;border-radius:11px;background:var(--crimson);display:grid;place-items:center;font-size:24px;flex-shrink:0;box-shadow:0 3px 10px rgba(193,39,45,.4)}
+.brand h1{font-size:20px;font-weight:900;letter-spacing:-.3px;line-height:1.1}
+.brand p{font-size:12.5px;color:#A9B4C7;font-weight:500}
+.topbar-spacer{flex:1}
+.lang-toggle{display:flex;background:rgba(255,255,255,.1);border-radius:9px;padding:3px;gap:2px}
+.lang-toggle button{padding:6px 14px;border-radius:7px;color:#C2CBDA;font-weight:700;font-size:13.5px;transition:.15s}
+.lang-toggle button.active{background:#fff;color:var(--navy)}
+
+/* ---------- Stats ---------- */
+.stats{max-width:1240px;margin:0 auto;padding:22px 22px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--muted)}
+.stat.s-new::before{background:var(--navy-2)}
+.stat.s-progress::before{background:var(--gold)}
+.stat.s-embassy::before{background:var(--crimson)}
+.stat.s-ready::before{background:var(--ok)}
+.stat.s-money::before{background:var(--navy)}
+.stat .num{font-size:26px;font-weight:900;line-height:1}
+.stat .lbl{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:5px}
+.stat .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+/* ---------- Toolbar ---------- */
+.toolbar{max-width:1240px;margin:0 auto;padding:18px 22px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;padding:11px 42px 11px 14px;border:1px solid var(--line);border-radius:11px;background:var(--paper);outline:none;transition:.15s}
+.search input:focus{border-color:var(--crimson);box-shadow:0 0 0 3px rgba(193,39,45,.1)}
+.search .ic{position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-weight:600;font-size:13.5px;color:var(--muted);transition:.15s}
+.chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn{padding:11px 18px;border-radius:11px;font-weight:700;font-size:14px;transition:.15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn-primary{background:var(--crimson);color:#fff;box-shadow:0 3px 10px rgba(193,39,45,.3)}
+.btn-primary:hover{background:var(--crimson-dark)}
+.btn-ghost{background:var(--paper);border:1px solid var(--line);color:var(--navy)}
+.btn-ghost:hover{border-color:var(--navy);background:#fbfaf7}
+
+/* ---------- Cards grid ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:8px 22px 60px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;transition:.15s}
+.card:hover{box-shadow:0 4px 12px rgba(22,35,59,.1),0 14px 34px rgba(22,35,59,.08);transform:translateY(-2px)}
+.card-top{padding:16px 16px 12px;display:flex;gap:13px}
+.avatar{width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--cream);border:1px solid var(--line);flex-shrink:0;cursor:pointer}
+.avatar.ph{display:grid;place-items:center;font-size:24px;color:var(--muted)}
+.card-id{flex:1;min-width:0}
+.card-name{font-weight:800;font-size:16.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-pass{font-size:13px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}
+.card-phone{font-size:13px;color:var(--muted);margin-top:1px;direction:ltr;text-align:start}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:12.5px;font-weight:700}
+.sb-new{background:#EAEEF6;color:var(--navy-2)}
+.sb-progress{background:var(--warn-bg);color:var(--warn)}
+.sb-embassy{background:#FBE7E8;color:var(--crimson)}
+.sb-ready{background:var(--ok-bg);color:var(--ok)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+/* pipeline */
+.pipeline{display:flex;gap:0;padding:0 16px 12px;align-items:center}
+.step{flex:1;text-align:center;position:relative}
+.step .bar{height:5px;background:var(--line);border-radius:3px;margin-bottom:6px;transition:.2s}
+.step.done .bar{background:var(--crimson)}
+.step .t{font-size:10.5px;color:var(--muted);font-weight:600}
+.step.done .t{color:var(--crimson)}
+.step:not(:last-child) .bar{margin-inline-end:3px}
+
+.card-foot{margin-top:auto;padding:12px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;background:#FCFBF8}
+.pay{display:flex;align-items:center;gap:7px;font-weight:800;font-size:15px}
+.pay .amt{font-variant-numeric:tabular-nums}
+.pay-tag{padding:3px 9px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s}
+.pay-tag.paid{background:var(--ok-bg);color:var(--ok)}
+.pay-tag.unpaid{background:#FBE7E8;color:var(--crimson)}
+.foot-spacer{flex:1}
+.icon-btn{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--muted);border:1px solid var(--line);background:#fff;transition:.15s;font-size:15px}
+.icon-btn:hover{color:var(--navy);border-color:var(--navy)}
+.icon-btn.danger:hover{color:#fff;background:var(--crimson);border-color:var(--crimson)}
+
+.card-notes{padding:0 16px 12px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.card-expiry{padding:0 16px 12px;margin-top:-4px}
+.expiry-flag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:7px}
+.expiry-ok{background:var(--ok-bg);color:var(--ok)}
+.expiry-warn{background:var(--warn-bg);color:var(--warn)}
+.expiry-bad{background:#FBE7E8;color:var(--crimson)}
+
+/* advance button */
+.advance{width:100%;margin:0 16px 14px;width:calc(100% - 32px);padding:10px;border-radius:10px;background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.advance:hover{background:var(--navy-2)}
+.advance.ready{background:var(--ok)}
+
+/* empty */
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty .big{font-size:52px;margin-bottom:14px}
+.empty h3{font-size:19px;color:var(--navy);font-weight:800;margin-bottom:6px}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(22,35,59,.55);backdrop-filter:blur(3px);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--paper);border-radius:20px;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;animation:pop .2s ease}
+@keyframes pop{from{transform:translateY(14px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.modal-head{background:var(--navy);color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:18px;font-weight:800}
+.modal-close{width:34px;height:34px;border-radius:9px;color:#fff;display:grid;place-items:center;font-size:20px;transition:.15s}
+.modal-close:hover{background:rgba(255,255,255,.15)}
+.modal-body{padding:22px;display:grid;gap:16px;max-height:70vh;overflow-y:auto}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;outline:none;transition:.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--crimson);box-shadow:0 0 0 3px rgba(193,39,45,.1)}
+.field.ltr input{direction:ltr;text-align:start}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.photo-slot{border:2px dashed var(--line);border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:.15s;position:relative;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.photo-slot:hover{border-color:var(--crimson);background:#FCFBF8}
+.photo-slot img{max-width:100%;max-height:110px;border-radius:9px;object-fit:cover}
+.photo-slot .ic{font-size:30px;color:var(--muted)}
+.photo-slot .t{font-size:13px;font-weight:700;color:var(--navy)}
+.photo-slot .s{font-size:11.5px;color:var(--muted)}
+.photo-slot .rm{position:absolute;top:8px;inset-inline-end:8px;width:26px;height:26px;border-radius:7px;background:var(--crimson);color:#fff;display:grid;place-items:center;font-size:15px}
+.scan-btn{width:100%;padding:12px;border-radius:12px;background:var(--gold);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;box-shadow:0 3px 10px rgba(201,154,59,.3)}
+.scan-btn:hover:not(:disabled){filter:brightness(.93)}
+.scan-btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;box-shadow:none}
+.scan-btn.loading{background:var(--navy)}
+.scan-status{font-size:12.5px;text-align:center;min-height:15px;line-height:1.4}
+.scan-status.ok{color:var(--ok);font-weight:600}
+.scan-status.err{color:var(--crimson);font-weight:600}
+.scan-status.load{color:var(--muted)}
+.scan-hint{font-size:11.5px;color:var(--muted);text-align:center;line-height:1.45;margin-top:-6px}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;background:#FCFBF8}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:80;display:none;align-items:center;justify-content:center;padding:30px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90%;max-height:90%;border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.5)}
+.lightbox .x{position:absolute;top:20px;inset-inline-end:24px;color:#fff;font-size:36px;cursor:pointer;line-height:1}
+
+/* toast */
+.toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(50%) translateY(120px);background:var(--navy);color:#fff;padding:13px 22px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:90;transition:.3s;display:flex;align-items:center;gap:9px}
+html[dir=rtl] .toast{transform:translateX(50%) translateY(120px)}
+.toast.show{transform:translateX(50%) translateY(0)}
+.toast.ok{background:var(--ok)}
+
+/* ---- view switching ---- */
+#loginScreen,#statusScreen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;flex-direction:column}
+#setupScreen,#signupScreen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;flex-direction:column}
+body.view-login #loginScreen{display:flex}
+body.view-status #statusScreen{display:flex}
+body.view-setup #setupScreen{display:flex}
+body.view-signup #signupScreen{display:flex}
+body:not(.view-app) .topbar,
+body:not(.view-app) #stats,
+body:not(.view-app) .toolbar,
+body:not(.view-app) .wrap{display:none!important}
+.link-btn{margin-top:14px;color:var(--muted);font-size:12.5px;font-weight:600;text-decoration:underline;background:none}
+.link-btn:hover{color:var(--navy)}
+
+/* ---- login ---- */
+.login-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:34px 30px;width:100%;max-width:380px;text-align:center}
+.login-badge{width:64px;height:64px;border-radius:16px;background:var(--crimson);display:grid;place-items:center;font-size:34px;margin:0 auto 16px;box-shadow:0 4px 14px rgba(193,39,45,.4)}
+.login-card h1{font-size:22px;font-weight:900;color:var(--navy)}
+.login-sub{color:var(--muted);font-size:13.5px;margin-bottom:22px}
+.login-field{text-align:start;margin-bottom:14px}
+.login-field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.login-field input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:11px;outline:none;transition:.15s}
+.login-field input:focus{border-color:var(--crimson);box-shadow:0 0 0 3px rgba(193,39,45,.1)}
+.login-err{color:var(--crimson);font-size:13px;font-weight:600;min-height:18px;margin-bottom:6px}
+.login-btn{width:100%;padding:13px;border-radius:12px;background:var(--crimson);color:#fff;font-weight:800;font-size:15px;transition:.15s}
+.login-btn:hover{background:var(--crimson-dark)}
+
+/* ---- topbar small buttons ---- */
+.tb-btn{color:#C2CBDA;font-weight:700;font-size:13px;padding:7px 11px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;transition:.15s}
+.tb-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* ---- status screen (client) ---- */
+#statusScreen{background:linear-gradient(160deg,#16233B,#22355A)}
+.status-card{background:var(--paper);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.35);width:100%;max-width:440px;overflow:hidden}
+.status-head{background:var(--crimson);color:#fff;padding:24px;text-align:center}
+.status-head .login-badge{background:rgba(255,255,255,.15);box-shadow:none;margin-bottom:12px}
+.status-head h1{font-size:19px;font-weight:800;color:#fff}
+.status-body{padding:26px 24px}
+.status-current{text-align:center;margin-bottom:22px}
+.cur-badge{display:inline-block;padding:8px 22px;border-radius:24px;font-size:16px;font-weight:800;color:#fff}
+.status-pipe{display:flex;align-items:flex-start;margin-bottom:24px}
+.sp-step{text-align:center;flex:1;min-width:0}
+.sp-dot{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:800;color:#bbb;margin:0 auto 8px;background:#fff;transition:.2s}
+.sp-step.done .sp-dot{background:var(--crimson);border-color:var(--crimson);color:#fff}
+.sp-step.cur .sp-dot{box-shadow:0 0 0 5px rgba(193,39,45,.18)}
+.sp-lbl{font-size:11.5px;font-weight:600;color:#888;line-height:1.3}
+.sp-step.done .sp-lbl{color:var(--crimson);font-weight:800}
+.sp-line{height:3px;background:var(--line);flex:1;margin:19px -4px 0}
+.sp-line.done{background:var(--crimson)}
+.status-info{border-top:1px solid var(--line);padding-top:8px}
+.si-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line)}
+.si-row span{color:var(--muted);font-size:13.5px;font-weight:600}
+.si-row b{font-size:15px;color:var(--ink)}
+.si-row b.ltr{direction:ltr}
+.si-updated{text-align:center;color:var(--muted);font-size:12.5px;margin-top:16px}
+.status-lang{margin-top:18px;background:rgba(255,255,255,.12)}
+.icon-btn.wa{color:#25D366;border-color:#B9EBC9}
+.icon-btn.wa:hover{background:#25D366;color:#fff;border-color:#25D366}
+
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.stat.s-money{grid-column:span 2}}
+@media(max-width:560px){.row2,.photos{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.stat.s-money{grid-column:span 1}.brand h1{font-size:17px}}
+
+/* single-card print sheet */
+#printArea{display:none}
+.p-sheet{font-family:var(--font);color:#111;padding:2mm}
+.p-head{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--crimson);padding-bottom:12px;margin-bottom:18px}
+.p-title{display:flex;gap:11px;align-items:center}
+.p-badge{width:46px;height:46px;border-radius:11px;background:var(--crimson);display:grid;place-items:center;font-size:25px}
+.p-title h1{font-size:21px;font-weight:900;color:var(--navy);line-height:1.1}
+.p-title p{font-size:12px;color:#666}
+.p-date{font-size:12px;color:#666;font-weight:600}
+.p-name-row{display:flex;gap:18px;align-items:center;margin-bottom:6px}
+.p-photo{width:88px;height:110px;object-fit:cover;border-radius:9px;border:1px solid #ccc;flex-shrink:0}
+.p-name{font-size:25px;font-weight:800;color:var(--navy)}
+.p-status{display:inline-block;margin-top:8px;padding:5px 15px;border-radius:20px;font-size:13.5px;font-weight:800;border:2px solid}
+.p-pipeline{display:flex;align-items:center;margin:20px 0;padding:16px 18px;border:1px solid #ddd;border-radius:14px;background:#FCFBF8}
+.p-step{text-align:center;flex-shrink:0}
+.p-dot{width:36px;height:36px;border-radius:50%;border:2px solid #ccc;display:grid;place-items:center;font-weight:800;font-size:15px;color:#aaa;margin:0 auto 7px;background:#fff}
+.p-step.done .p-dot{background:var(--crimson);border-color:var(--crimson);color:#fff}
+.p-step.cur .p-dot{box-shadow:0 0 0 4px rgba(193,39,45,.18)}
+.p-slbl{font-size:12px;font-weight:600;color:#777}
+.p-step.done .p-slbl{color:var(--crimson);font-weight:800}
+.p-line{flex:1;height:3px;background:#ddd;margin:0 6px 26px}
+.p-line.done{background:var(--crimson)}
+.p-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.p-field{border:1px solid #e6e6e6;border-radius:11px;padding:11px 15px}
+.p-field span{display:block;font-size:11px;color:#8a8a8a;margin-bottom:4px;font-weight:600}
+.p-field b{font-size:15.5px;color:#111}
+.p-field b.ltr{direction:ltr;display:inline-block}
+.p-notes{border:1px solid #e6e6e6;border-radius:11px;padding:11px 15px;margin-bottom:14px}
+.p-notes span{font-size:11px;color:#8a8a8a;font-weight:600}
+.p-notes p{font-size:14px;margin-top:3px}
+.p-passport-img{margin-top:6px}
+.p-passport-img span{font-size:11px;color:#8a8a8a;font-weight:600;display:block;margin-bottom:7px}
+.p-passport-img img{max-width:100%;max-height:280px;border-radius:9px;border:1px solid #ccc}
+
+/* print */
+@media print{
+  .topbar,.toolbar,.card-foot .icon-btn,.advance,.pay-tag,.lang-toggle{display:none!important}
+  body{background:#fff}
+  .card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+  .stats{padding-top:10px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  body.printing-single .topbar,
+  body.printing-single .stats,
+  body.printing-single .toolbar,
+  body.printing-single .wrap{display:none!important}
+  body.printing-single #printArea{display:block!important}
+  @page{margin:14mm}
+}
+</style>
+</head>
+<body>
+
+<div id="setupScreen">
+  <div class="login-card">
+    <div class="login-badge">🗄️</div>
+    <h1 data-t="setupTitle">חיבור למסד הנתונים</h1>
+    <p class="login-sub" data-t="setupDesc">הדבק את הפרטים מ-Supabase (פעם אחת)</p>
+    <div class="login-field"><label data-t="setupUrl">Project URL</label><input id="su_url" placeholder="https://xxxx.supabase.co" dir="ltr"></div>
+    <div class="login-field"><label data-t="setupKey">anon public key</label><input id="su_key" placeholder="eyJhbGci..." dir="ltr"></div>
+    <div class="login-err" id="setupErr"></div>
+    <button class="login-btn" onclick="saveConfig()" data-t="setupSave">התחבר למסד</button>
+  </div>
+</div>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-badge">🇨🇳</div>
+    <h1 data-t="loginTitle">כניסה</h1>
+    <p class="login-sub" data-t="appTitle">ניהול ויזה לסין</p>
+    <div class="login-field"><label data-t="emailLabel">אימייל</label><input id="li_user" type="email" autocomplete="username" dir="ltr"></div>
+    <div class="login-field"><label data-t="loginPass">סיסמה</label><input id="li_pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-err" id="loginErr"></div>
+    <button class="login-btn" onclick="doLogin()" data-t="loginBtn">התחברות</button>
+    <button class="link-btn" onclick="setView('signup')" data-t="goSignup">צור חשבון חדש</button>
+    <button class="link-btn" onclick="showSetup()" data-t="changeConn">שנה חיבור למסד</button>
+  </div>
+</div>
+
+<div id="signupScreen">
+  <div class="login-card">
+    <div class="login-badge">🆕</div>
+    <h1 data-t="signupTitle">יצירת חשבון</h1>
+    <p class="login-sub" data-t="appTitle">ניהול ויזה לסין</p>
+    <div class="login-field"><label data-t="emailLabel">אימייל</label><input id="su_email" type="email" autocomplete="username" dir="ltr"></div>
+    <div class="login-field"><label data-t="loginPass">סיסמה</label><input id="su_pass" type="password" autocomplete="new-password" dir="ltr" onkeydown="if(event.key==='Enter')doSignup()"></div>
+    <div class="login-err" id="signupErr"></div>
+    <button class="login-btn" onclick="doSignup()" data-t="signupBtn">הרשמה</button>
+    <button class="link-btn" onclick="setView('login')" data-t="goLogin">כבר יש לי חשבון</button>
+  </div>
+</div>
+
+<div id="statusScreen">
+  <div class="status-card">
+    <div class="status-head">
+      <div class="login-badge">🇨🇳</div>
+      <h1 data-t="statusHeading">סטטוס בקשת ויזה לסין</h1>
+    </div>
+    <div class="status-body" id="statusBody"></div>
+  </div>
+  <div class="lang-toggle status-lang">
+    <button id="slHe" onclick="setLang('he')">עברית</button>
+    <button id="slAr" onclick="setLang('ar')">العربية</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-badge">🇨🇳</div>
+      <div>
+        <h1 data-t="appTitle">ניהול ויזה לסין</h1>
+        <p data-t="appSub">מהפנייה ועד קבלת הדרכון</p>
+      </div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="lang-toggle">
+      <button id="langHe" class="active" onclick="setLang('he')">עברית</button>
+      <button id="langAr" onclick="setLang('ar')">العربية</button>
+    </div>
+    <button class="tb-btn" onclick="changePassword()" title="שנה סיסמה">🔒</button>
+    <button class="tb-btn" onclick="logout()"><span data-t="logout">יציאה</span> ⎋</button>
+  </div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="toolbar">
+  <div class="search">
+    <span class="ic">🔍</span>
+    <input id="search" oninput="render()" data-ph="searchPh" placeholder="חיפוש לפי שם / דרכון / טלפון...">
+  </div>
+  <div class="filter-chips" id="chips"></div>
+  <button class="btn btn-ghost" onclick="exportExcel()" data-t="export">📊 ייצוא לאקסל</button>
+  <button class="btn btn-ghost" onclick="window.print()" data-t="print">🖨️ הדפסה</button>
+  <button class="btn btn-primary" onclick="openModal()" data-t="addNew">＋ נוסע חדש</button>
+</div>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle" data-t="newClient">נוסע חדש</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="photos">
+        <div class="photo-slot" id="slotPassport" onclick="document.getElementById('filePassport').click()">
+          <div class="ic">📘</div>
+          <div class="t" data-t="passportPhoto">צילום דרכון</div>
+          <div class="s" data-t="tapUpload">לחץ להעלאה</div>
+        </div>
+        <div class="photo-slot" id="slotPersonal" onclick="document.getElementById('filePersonal').click()">
+          <div class="ic">🖼️</div>
+          <div class="t" data-t="personalPhoto">תמונה אישית</div>
+          <div class="s" data-t="tapUpload">לחץ להעלאה</div>
+        </div>
+      </div>
+      <input type="file" id="filePassport" accept="image/*" hidden onchange="handlePhoto(event,'passport')">
+      <input type="file" id="filePersonal" accept="image/*" hidden onchange="handlePhoto(event,'personal')">
+
+      <button type="button" class="scan-btn" id="scanBtn" onclick="scanPassport()" disabled>
+        <span id="scanBtnIcon">🔍</span><span data-t="scanBtn">סרוק פרטים מהדרכון</span>
+      </button>
+      <div class="scan-status" id="scanStatus"></div>
+      <div class="scan-hint" data-t="scanHint">טיפ: צילום ישר וברור של עמוד הדרכון הראשי (כולל 2 שורות ה-MRZ למטה). השם יזוהה באנגלית.</div>
+
+      <div class="field">
+        <label data-t="fullName">שם מלא</label>
+        <input id="f_name" data-ph="fullNamePh" placeholder="שם הנוסע">
+      </div>
+      <div class="row2">
+        <div class="field ltr">
+          <label data-t="passportNum">מספר דרכון</label>
+          <input id="f_passport" placeholder="A1234567">
+        </div>
+        <div class="field ltr">
+          <label data-t="phone">טלפון</label>
+          <input id="f_phone" placeholder="050-000-0000">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label data-t="status">שלב</label>
+          <select id="f_status"></select>
+        </div>
+        <div class="field ltr">
+          <label data-t="passportExpiry">תוקף דרכון</label>
+          <input id="f_expiry" type="date">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field ltr">
+          <label data-t="amount">סכום (₪)</label>
+          <input id="f_amount" type="number" value="550">
+        </div>
+        <div class="field">
+          <label data-t="payStatus">תשלום</label>
+          <select id="f_paid">
+            <option value="false" data-t="unpaid">לא שולם</option>
+            <option value="true" data-t="paid">שולם</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label data-t="notes">הערות</label>
+        <textarea id="f_notes" rows="2" data-ph="notesPh" placeholder="הערות פנימיות..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()" data-t="cancel">ביטול</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveClient()" data-t="save">שמירה</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="x">✕</span>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<div id="printArea"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= i18n ================= */
+const I18N={
+  he:{
+    appTitle:"ניהול ויזה לסין", appSub:"מהפנייה ועד קבלת הדרכון",
+    searchPh:"חיפוש לפי שם / דרכון / טלפון...",
+    export:"📊 ייצוא לאקסל", print:"🖨️ הדפסה", addNew:"＋ נוסע חדש",
+    newClient:"נוסע חדש", editClient:"עריכת נוסע",
+    passportPhoto:"צילום דרכון", personalPhoto:"תמונה אישית", tapUpload:"לחץ להעלאה",
+    fullName:"שם מלא", fullNamePh:"שם הנוסע", passportNum:"מספר דרכון", phone:"טלפון",
+    status:"שלב", passportExpiry:"תוקף דרכון", amount:"סכום (₪)", payStatus:"תשלום",
+    paid:"שולם", unpaid:"לא שולם", notes:"הערות", notesPh:"הערות פנימיות...",
+    cancel:"ביטול", save:"שמירה",
+    st_new:"חדש", st_progress:"בטיפול", st_embassy:"בשגרירות", st_ready:"מוכן",
+    all:"הכל", chip_new:"חדשים", chip_progress:"בטיפול", chip_embassy:"בשגרירות", chip_ready:"מוכנים",
+    stat_new:"חדשים", stat_progress:"בטיפול", stat_embassy:"בשגרירות", stat_ready:"מוכנים",
+    stat_money:"הכנסות", collected:"נגבה", pending:"ממתין",
+    advance_new:"התחל טיפול ←", advance_progress:"שלח לשגרירות ←", advance_embassy:"סמן כמוכן ←", advance_ready:"✓ הושלם",
+    empty_title:"אין נוסעים עדיין", empty_sub:"לחץ על \"נוסע חדש\" כדי להתחיל",
+    empty_search:"לא נמצאו תוצאות",
+    saved:"נשמר בהצלחה", deleted:"הנוסע נמחק", confirmDel:"למחוק את הנוסע?",
+    needName:"נא להזין שם", currency:"₪",
+    exp_valid:"דרכון בתוקף", exp_soon:"פג בקרוב", exp_expired:"פג תוקף",
+    createdOn:"נפתח", noPhoto:"אין תמונה",
+    printCard:"הדפס כרטיס",
+    loginTitle:"כניסת מנהל", loginUser:"שם משתמש", loginPass:"סיסמה",
+    loginBtn:"התחברות", loginErr:"שם משתמש או סיסמה שגויים",
+    logout:"יציאה", passOld:"הזן סיסמה נוכחית:", passNew:"הזן סיסמה חדשה:",
+    passChanged:"הסיסמה שונתה בהצלחה", passWrong:"סיסמה נוכחית שגויה",
+    sendStatus:"שלח סטטוס ללקוח", linkCopied:"הקישור הועתק ונפתח וואטסאפ",
+    noPhone:"אין מספר טלפון — הקישור הועתק",
+    statusHeading:"סטטוס בקשת ויזה לסין", statusUpdated:"עודכן בתאריך",
+    setupTitle:"חיבור למסד הנתונים", setupDesc:"הדבק את הפרטים מ-Supabase (פעם אחת)",
+    setupUrl:"Project URL", setupKey:"anon public key", setupSave:"התחבר למסד",
+    setupErr:"נא למלא את שני השדות", emailLabel:"אימייל", changeConn:"שנה חיבור למסד",
+    signupTitle:"יצירת חשבון", signupBtn:"הרשמה", goSignup:"צור חשבון חדש", goLogin:"כבר יש לי חשבון",
+    passShort:"הסיסמה חייבת לפחות 6 תווים", signupCheck:"נשלח מייל אימות — אשר אותו ואז התחבר", saving:"שומר...",
+    connecting:"מתחבר...", saveErr:"שגיאה בשמירה לענן", loadErr:"שגיאה בטעינה מהענן",
+    scanBtn:"סרוק פרטים מהדרכון",
+    scanHint:"טיפ: צילום ישר וברור של עמוד הדרכון הראשי (כולל 2 שורות ה-MRZ למטה). השם יזוהה באנגלית.",
+    scanLoading:"טוען מנוע זיהוי...", scanning:"סורק דרכון...",
+    scanDone:"זוהו פרטים — בדוק ותקן במידת הצורך",
+    scanNoMrz:"לא זוהה אזור קריא. צלם ישר את עמוד הפרטים כולל 2 השורות התחתונות",
+    scanNoNet:"נדרש חיבור אינטרנט לסריקה", scanErr:"שגיאה בסריקה, נסה שוב"
+  },
+  ar:{
+    appTitle:"إدارة تأشيرة الصين", appSub:"من الطلب حتى استلام الجواز",
+    searchPh:"بحث بالاسم / الجواز / الهاتف...",
+    export:"📊 تصدير Excel", print:"🖨️ طباعة", addNew:"＋ مسافر جديد",
+    newClient:"مسافر جديد", editClient:"تعديل المسافر",
+    passportPhoto:"صورة الجواز", personalPhoto:"صورة شخصية", tapUpload:"اضغط للرفع",
+    fullName:"الاسم الكامل", fullNamePh:"اسم المسافر", passportNum:"رقم الجواز", phone:"الهاتف",
+    status:"المرحلة", passportExpiry:"صلاحية الجواز", amount:"المبلغ (₪)", payStatus:"الدفع",
+    paid:"مدفوع", unpaid:"غير مدفوع", notes:"ملاحظات", notesPh:"ملاحظات داخلية...",
+    cancel:"إلغاء", save:"حفظ",
+    st_new:"جديد", st_progress:"قيد المعالجة", st_embassy:"في السفارة", st_ready:"جاهز",
+    all:"الكل", chip_new:"جديد", chip_progress:"قيد المعالجة", chip_embassy:"في السفارة", chip_ready:"جاهز",
+    stat_new:"جديد", stat_progress:"قيد المعالجة", stat_embassy:"في السفارة", stat_ready:"جاهز",
+    stat_money:"الإيرادات", collected:"محصّل", pending:"معلّق",
+    advance_new:"ابدأ المعالجة ←", advance_progress:"أرسل للسفارة ←", advance_embassy:"حدّد كجاهز ←", advance_ready:"✓ مكتمل",
+    empty_title:"لا يوجد مسافرون بعد", empty_sub:"اضغط \"مسافر جديد\" للبدء",
+    empty_search:"لا توجد نتائج",
+    saved:"تم الحفظ بنجاح", deleted:"تم حذف المسافر", confirmDel:"حذف المسافر؟",
+    needName:"يرجى إدخال الاسم", currency:"₪",
+    exp_valid:"الجواز صالح", exp_soon:"ينتهي قريباً", exp_expired:"منتهي الصلاحية",
+    createdOn:"فُتح", noPhoto:"لا توجد صورة",
+    printCard:"طباعة البطاقة",
+    loginTitle:"دخول المدير", loginUser:"اسم المستخدم", loginPass:"كلمة المرور",
+    loginBtn:"تسجيل الدخول", loginErr:"اسم المستخدم أو كلمة المرور غير صحيحة",
+    logout:"خروج", passOld:"أدخل كلمة المرور الحالية:", passNew:"أدخل كلمة المرور الجديدة:",
+    passChanged:"تم تغيير كلمة المرور بنجاح", passWrong:"كلمة المرور الحالية غير صحيحة",
+    sendStatus:"إرسال الحالة للعميل", linkCopied:"تم نسخ الرابط وفتح واتساب",
+    noPhone:"لا يوجد رقم هاتف — تم نسخ الرابط",
+    statusHeading:"حالة طلب تأشيرة الصين", statusUpdated:"آخر تحديث",
+    setupTitle:"الاتصال بقاعدة البيانات", setupDesc:"الصق البيانات من Supabase (مرة واحدة)",
+    setupUrl:"Project URL", setupKey:"anon public key", setupSave:"اتصال بقاعدة البيانات",
+    setupErr:"يرجى تعبئة الحقلين", emailLabel:"البريد الإلكتروني", changeConn:"تغيير الاتصال بقاعدة البيانات",
+    signupTitle:"إنشاء حساب", signupBtn:"تسجيل", goSignup:"إنشاء حساب جديد", goLogin:"لدي حساب بالفعل",
+    passShort:"يجب أن تكون كلمة المرور 6 أحرف على الأقل", signupCheck:"تم إرسال بريد تأكيد — أكّده ثم سجّل الدخول", saving:"جارٍ الحفظ...",
+    connecting:"جارٍ الاتصال...", saveErr:"خطأ في الحفظ إلى السحابة", loadErr:"خطأ في التحميل من السحابة",
+    scanBtn:"مسح البيانات من الجواز",
+    scanHint:"نصيحة: صورة مستقيمة وواضحة لصفحة الجواز الرئيسية (مع سطري MRZ في الأسفل). سيظهر الاسم بالإنجليزية.",
+    scanLoading:"جارٍ تحميل محرك التعرّف...", scanning:"جارٍ مسح الجواز...",
+    scanDone:"تم التعرّف على البيانات — يرجى المراجعة والتصحيح",
+    scanNoMrz:"لم يتم التعرّف على المنطقة القابلة للقراءة. صوّر صفحة البيانات مستقيمة مع السطرين السفليين",
+    scanNoNet:"يلزم اتصال بالإنترنت للمسح", scanErr:"حدث خطأ أثناء المسح، حاول مرة أخرى"
+  }
+};
+const STATUSES=["new","progress","embassy","ready"];
+let lang=localStorage.getItem("cv_lang")||"he";
+let clients=[];
+let filter="all";
+let editingId=null;
+let tmpPhotos={passport:null,personal:null};
+let tmpPhotoChanged={passport:false,personal:false};
+let tmpScanSrc=null;
+let supa=null;
+
+function t(k){return I18N[lang][k]||k;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+/* ---- Supabase config + data ---- */
+/* ====== חבר את המסד פעם אחת: הדבק כאן את 2 הפרטים מ-Supabase ====== */
+const SUPA_URL = "https://xwqioeydoxwapoyeglup.supabase.co";  /* למשל: https://abcd.supabase.co */
+const SUPA_KEY = "sb_publishable_0-uauz5GHa-Ezxoa2N9bUQ_4Zark4tT";  /* anon public key: eyJhbGci... */
+/* ================================================================ */
+function getCfg(){
+  if(SUPA_URL&&SUPA_KEY)return{url:SUPA_URL,key:SUPA_KEY};
+  try{return JSON.parse(localStorage.getItem("cv_supa")||"null");}catch(e){return null;}
+}
+function initSupa(){
+  const c=getCfg();
+  if(!c||!c.url||!c.key||!window.supabase)return false;
+  supa=window.supabase.createClient(c.url,c.key);
+  return true;
+}
+async function loadClients(){
+  if(!supa)return;
+  const{data,error}=await supa.from("clients").select("data,updated_at").order("updated_at",{ascending:false});
+  if(error){toast(t("loadErr"));return;}
+  clients=(data||[]).map(r=>r.data);
+  render();
+}
+async function persist(c){
+  if(!supa)return;
+  const{error}=await supa.from("clients").upsert({id:c.id,data:c,updated_at:new Date().toISOString()});
+  if(error)toast(t("saveErr"));
+}
+async function removeRow(id){
+  if(!supa)return;
+  await supa.from("clients").delete().eq("id",id);
+}
+
+/* ================= Language ================= */
+function setLang(l){
+  lang=l; localStorage.setItem("cv_lang",l);
+  document.documentElement.setAttribute("lang",l);
+  document.documentElement.setAttribute("data-lang",l);
+  document.getElementById("langHe").classList.toggle("active",l==="he");
+  document.getElementById("langAr").classList.toggle("active",l==="ar");
+  const slHe=document.getElementById("slHe"),slAr=document.getElementById("slAr");
+  if(slHe)slHe.classList.toggle("active",l==="he");
+  if(slAr)slAr.classList.toggle("active",l==="ar");
+  applyStaticText();
+  buildStatusSelect();
+  buildChips();
+  render();
+  if(window._statusData)renderStatus(window._statusData);
+}
+function applyStaticText(){
+  document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t);});
+  document.querySelectorAll("[data-ph]").forEach(el=>{el.placeholder=t(el.dataset.ph);});
+}
+function buildStatusSelect(){
+  const sel=document.getElementById("f_status");
+  sel.innerHTML=STATUSES.map(s=>`<option value="${s}">${t("st_"+s)}</option>`).join("");
+}
+function buildChips(){
+  const c=document.getElementById("chips");
+  const items=[["all","all"],["new","chip_new"],["progress","chip_progress"],["embassy","chip_embassy"],["ready","chip_ready"]];
+  c.innerHTML=items.map(([k,lbl])=>`<button class="chip ${filter===k?"active":""}" onclick="setFilter('${k}')">${t(lbl)}</button>`).join("");
+}
+function setFilter(f){filter=f;buildChips();render();}
+
+/* ================= Photos ================= */
+function handlePhoto(e,type){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    if(type==="passport")tmpScanSrc=ev.target.result;
+    const img=new Image();
+    img.onload=()=>{
+      const max=700;
+      let{width:w,height:h}=img;
+      if(w>max||h>max){const r=Math.min(max/w,max/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      tmpPhotos[type]=cv.toDataURL("image/jpeg",0.82);
+      tmpPhotoChanged[type]=true;
+      renderPhotoSlot(type);
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+}
+function renderPhotoSlot(type){
+  const slot=document.getElementById(type==="passport"?"slotPassport":"slotPersonal");
+  const data=tmpPhotos[type];
+  if(data){
+    slot.innerHTML=`<button class="rm" onclick="removePhoto(event,'${type}')">✕</button><img src="${data}">`;
+  }else{
+    const ic=type==="passport"?"📘":"🖼️";
+    const lbl=type==="passport"?t("passportPhoto"):t("personalPhoto");
+    slot.innerHTML=`<div class="ic">${ic}</div><div class="t">${lbl}</div><div class="s">${t("tapUpload")}</div>`;
+  }
+  if(type==="passport")updateScanBtn();
+}
+function removePhoto(e,type){e.stopPropagation();tmpPhotos[type]=null;tmpPhotoChanged[type]=true;renderPhotoSlot(type);updateScanBtn();}
+
+/* ================= Passport OCR (MRZ) ================= */
+let tessWorker=null;
+function updateScanBtn(){
+  const btn=document.getElementById("scanBtn");
+  if(btn)btn.disabled=!tmpPhotos.passport;
+}
+async function scanPassport(){
+  if(!tmpPhotos.passport)return;
+  const btn=document.getElementById("scanBtn");
+  const icon=document.getElementById("scanBtnIcon");
+  const st=document.getElementById("scanStatus");
+  if(typeof Tesseract==="undefined"){st.className="scan-status err";st.textContent=t("scanNoNet");return;}
+  btn.disabled=true;btn.classList.add("loading");
+  icon.innerHTML='<span class="spin">⏳</span>';
+  st.className="scan-status load";st.textContent=t("scanLoading");
+  try{
+    if(!tessWorker){
+      tessWorker=await Tesseract.createWorker("eng",1,{
+        workerPath:"https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+        corePath:"https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0",
+        langPath:"https://tessdata.projectnaptha.com/4.0.0",
+        logger:m=>{if(m.status==="recognizing text")st.textContent=t("scanning")+" "+Math.round(m.progress*100)+"%";}
+      });
+      await tessWorker.setParameters({tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",tessedit_pageseg_mode:"6"});
+    }
+    st.textContent=t("scanning");
+    const src=tmpScanSrc||tmpPhotos.passport;
+    const{data}=await tessWorker.recognize(src);
+    const mrz=parseMRZ(data.text);
+    if(!mrz){st.className="scan-status err";st.textContent=t("scanNoMrz");}
+    else{
+      if(mrz.name)document.getElementById("f_name").value=mrz.name;
+      if(mrz.passport)document.getElementById("f_passport").value=mrz.passport;
+      if(mrz.expiry)document.getElementById("f_expiry").value=mrz.expiry;
+      if(mrz.extra){const n=document.getElementById("f_notes");if(!n.value.trim())n.value=mrz.extra;}
+      st.className="scan-status ok";st.textContent="✓ "+t("scanDone");
+    }
+  }catch(err){
+    st.className="scan-status err";
+    st.textContent=t("scanErr")+" — "+((err&&err.message)?err.message:String(err));
+  }
+  finally{btn.classList.remove("loading");icon.textContent="🔍";updateScanBtn();}
+}
+function mrzDate(s,future){
+  if(!/^\d{6}$/.test(s))return"";
+  const yy=+s.slice(0,2),mm=+s.slice(2,4),dd=+s.slice(4,6);
+  if(mm<1||mm>12||dd<1||dd>31)return"";
+  const year=future?2000+yy:(yy>(new Date().getFullYear()%100)?1900+yy:2000+yy);
+  return year+"-"+String(mm).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
+}
+function parseMRZ(text){
+  let lines=(text||"").toUpperCase().split(/\r?\n/)
+    .map(l=>l.replace(/[^A-Z0-9<]/g,""))
+    .filter(l=>l.length>=25);
+  let cand=lines.filter(l=>l.includes("<"));
+  if(cand.length<2)cand=lines.filter(l=>l.length>=30);
+  if(cand.length<2)return null;
+  let i=cand.findIndex(l=>/^P[<A-Z0-9]/.test(l)&&l.includes("<<"));
+  let l1,l2;
+  if(i>=0&&cand[i+1]){l1=cand[i];l2=cand[i+1];}
+  else{l1=cand[cand.length-2];l2=cand[cand.length-1];}
+  const pad=s=>(s+"<".repeat(44)).slice(0,44);
+  l1=pad(l1);l2=pad(l2);
+  const norm=s=>(s||"").replace(/</g," ").trim().split(/\s+/).filter(w=>w.length>=2);
+  const nameParts=l1.slice(5).split("<<");
+  const words=[...norm(nameParts[0]),...norm(nameParts[1]||"")];
+  let name=words.map(w=>w[0]+w.slice(1).toLowerCase()).join(" ");
+  const passport=l2.slice(0,9).replace(/</g,"").trim();
+  const nat=l2.slice(10,13).replace(/</g,"");
+  const dob=mrzDate(l2.slice(13,19),false);
+  const sex=l2.slice(20,21).replace("<","");
+  const expiry=mrzDate(l2.slice(21,27),true);
+  if(!name&&!passport)return null;
+  let parts=[];
+  if(nat)parts.push(nat);
+  if(dob)parts.push("DOB "+dob);
+  if(sex&&sex!=="<")parts.push(sex);
+  const extra=parts.join(" · ");
+  return{name,passport,expiry,extra};
+}
+
+/* ================= Modal ================= */
+function openModal(id){
+  editingId=id||null;
+  tmpPhotos={passport:null,personal:null};
+  tmpPhotoChanged={passport:false,personal:false};
+  tmpScanSrc=null;
+  const c=id?clients.find(x=>x.id===id):null;
+  document.getElementById("modalTitle").textContent=id?t("editClient"):t("newClient");
+  document.getElementById("f_name").value=c?c.name:"";
+  document.getElementById("f_passport").value=c?c.passport:"";
+  document.getElementById("f_phone").value=c?c.phone:"";
+  document.getElementById("f_status").value=c?c.status:"new";
+  document.getElementById("f_expiry").value=c?c.expiry:"";
+  document.getElementById("f_amount").value=c?c.amount:550;
+  document.getElementById("f_paid").value=c?String(c.paid):"false";
+  document.getElementById("f_notes").value=c?c.notes:"";
+  if(c){tmpPhotos.passport=c.passportPhoto;tmpPhotos.personal=c.personalPhoto;}
+  renderPhotoSlot("passport");renderPhotoSlot("personal");
+  const st=document.getElementById("scanStatus");st.textContent="";st.className="scan-status";
+  updateScanBtn();
+  document.getElementById("overlay").classList.add("open");
+}
+function closeModal(){document.getElementById("overlay").classList.remove("open");}
+async function uploadPhoto(clientId,type,dataUrl){
+  if(!dataUrl)return null;
+  if(!dataUrl.startsWith("data:"))return dataUrl; // already a stored URL
+  if(!supa)return dataUrl;
+  try{
+    const blob=await(await fetch(dataUrl)).blob();
+    const path=clientId+"/"+type+".jpg";
+    const{error}=await supa.storage.from("photos").upload(path,blob,{contentType:"image/jpeg",upsert:true});
+    if(error)throw error;
+    const{data}=supa.storage.from("photos").getPublicUrl(path);
+    return data.publicUrl+"?v="+Date.now();
+  }catch(e){return dataUrl;} // fallback: keep base64 so nothing is lost
+}
+async function saveClient(){
+  const name=document.getElementById("f_name").value.trim();
+  if(!name){toast(t("needName"));document.getElementById("f_name").focus();return;}
+  const btn=document.getElementById("saveBtn");
+  if(btn){btn.disabled=true;btn.textContent=t("saving");}
+  const base={
+    name,
+    passport:document.getElementById("f_passport").value.trim(),
+    phone:document.getElementById("f_phone").value.trim(),
+    status:document.getElementById("f_status").value,
+    expiry:document.getElementById("f_expiry").value,
+    amount:Number(document.getElementById("f_amount").value)||0,
+    paid:document.getElementById("f_paid").value==="true",
+    notes:document.getElementById("f_notes").value.trim()
+  };
+  const cur=editingId?clients.find(x=>x.id===editingId):null;
+  const id=editingId||uid();
+  const createdAt=cur?cur.createdAt:Date.now();
+  const personalPhoto=tmpPhotoChanged.personal?await uploadPhoto(id,"personal",tmpPhotos.personal):(cur?cur.personalPhoto:null);
+  const passportPhoto=tmpPhotoChanged.passport?await uploadPhoto(id,"passport",tmpPhotos.passport):(cur?cur.passportPhoto:null);
+  const obj={id,createdAt,...base,personalPhoto,passportPhoto};
+  if(editingId){clients[clients.findIndex(x=>x.id===editingId)]=obj;}
+  else clients.unshift(obj);
+  await persist(obj);
+  if(btn){btn.disabled=false;btn.textContent=t("save");}
+  closeModal();render();toast(t("saved"),true);
+}
+function delClient(id){
+  if(!confirm(t("confirmDel")))return;
+  clients=clients.filter(x=>x.id!==id);removeRow(id);render();toast(t("deleted"));
+}
+function advanceStatus(id){
+  const c=clients.find(x=>x.id===id);
+  const i=STATUSES.indexOf(c.status);
+  if(i<STATUSES.length-1){c.status=STATUSES[i+1];persist(c);render();}
+}
+function togglePaid(id){
+  const c=clients.find(x=>x.id===id);c.paid=!c.paid;persist(c);render();
+}
+
+/* ================= Lightbox ================= */
+function openLightbox(src){document.getElementById("lightboxImg").src=src;document.getElementById("lightbox").classList.add("open");}
+function closeLightbox(){document.getElementById("lightbox").classList.remove("open");}
+
+/* ================= Expiry check ================= */
+function expiryInfo(dateStr){
+  if(!dateStr)return null;
+  const exp=new Date(dateStr);const now=new Date();
+  const months=(exp-now)/(1000*60*60*24*30.4);
+  if(months<0)return{cls:"expiry-bad",txt:t("exp_expired"),ic:"⛔"};
+  if(months<6)return{cls:"expiry-warn",txt:t("exp_soon"),ic:"⚠️"};
+  return{cls:"expiry-ok",txt:t("exp_valid"),ic:"✓"};
+}
+
+/* ================= Render ================= */
+function render(){
+  renderStats();
+  const q=document.getElementById("search").value.trim().toLowerCase();
+  let list=clients.filter(c=>{
+    if(filter!=="all"&&c.status!==filter)return false;
+    if(q){
+      return (c.name+" "+c.passport+" "+c.phone).toLowerCase().includes(q);
+    }
+    return true;
+  });
+  const grid=document.getElementById("grid");
+  if(list.length===0){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1">
+      <div class="big">${clients.length===0?"🧳":"🔍"}</div>
+      <h3>${clients.length===0?t("empty_title"):t("empty_search")}</h3>
+      ${clients.length===0?`<p>${t("empty_sub")}</p>`:""}
+    </div>`;
+    return;
+  }
+  grid.innerHTML=list.map(cardHTML).join("");
+}
+
+function cardHTML(c){
+  const stepIdx=STATUSES.indexOf(c.status);
+  const pipeline=STATUSES.map((s,i)=>`
+    <div class="step ${i<=stepIdx?"done":""}">
+      <div class="bar"></div><div class="t">${t("st_"+s)}</div>
+    </div>`).join("");
+  const avatar=c.personalPhoto
+    ? `<img class="avatar" src="${c.personalPhoto}" onclick="openLightbox('${c.personalPhoto}')">`
+    : `<div class="avatar ph">👤</div>`;
+  const exp=expiryInfo(c.expiry);
+  const advLabels=["advance_new","advance_progress","advance_embassy","advance_ready"];
+  const advBtn=c.status==="ready"
+    ? `<button class="advance ready" disabled>${t("advance_ready")}</button>`
+    : `<button class="advance" onclick="advanceStatus('${c.id}')">${t(advLabels[stepIdx])}</button>`;
+  const passportThumb=c.passportPhoto
+    ? `<span class="icon-btn" title="${t('passportPhoto')}" onclick="openLightbox('${c.passportPhoto}')" style="cursor:pointer">📘</span>` : "";
+
+  return `<div class="card">
+    <div class="card-top">
+      ${avatar}
+      <div class="card-id">
+        <div class="card-name">${esc(c.name)}</div>
+        ${c.passport?`<div class="card-pass">📘 ${esc(c.passport)}</div>`:""}
+        ${c.phone?`<div class="card-phone">📱 ${esc(c.phone)}</div>`:""}
+      </div>
+      <span class="status-badge sb-${c.status}"><span class="dot"></span>${t("st_"+c.status)}</span>
+    </div>
+    <div class="pipeline">${pipeline}</div>
+    ${exp?`<div class="card-expiry"><span class="expiry-flag ${exp.cls}">${exp.ic} ${exp.txt}${c.expiry?" · "+fmtDate(c.expiry):""}</span></div>`:""}
+    ${c.notes?`<div class="card-notes">📝 ${esc(c.notes)}</div>`:""}
+    ${advBtn}
+    <div class="card-foot">
+      <div class="pay">
+        <span class="amt">${c.amount.toLocaleString()}</span><span style="font-size:13px;color:var(--muted)">${t("currency")}</span>
+        <span class="pay-tag ${c.paid?"paid":"unpaid"}" onclick="togglePaid('${c.id}')">${c.paid?t("paid"):t("unpaid")}</span>
+      </div>
+      <div class="foot-spacer"></div>
+      ${passportThumb}
+      <button class="icon-btn wa" title="${t('sendStatus')}" onclick="shareStatus('${c.id}')">💬</button>
+      <button class="icon-btn" title="${t('printCard')}" onclick="printClient('${c.id}')">🖨️</button>
+      <button class="icon-btn" title="${t('editClient')}" onclick="openModal('${c.id}')">✏️</button>
+      <button class="icon-btn danger" onclick="delClient('${c.id}')">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function renderStats(){
+  const counts={new:0,progress:0,embassy:0,ready:0};
+  let collected=0,pending=0;
+  clients.forEach(c=>{counts[c.status]++; c.paid?collected+=c.amount:pending+=c.amount;});
+  const s=document.getElementById("stats");
+  s.innerHTML=`
+    <div class="stat s-new"><div class="num">${counts.new}</div><div class="lbl">${t("stat_new")}</div></div>
+    <div class="stat s-progress"><div class="num">${counts.progress}</div><div class="lbl">${t("stat_progress")}</div></div>
+    <div class="stat s-embassy"><div class="num">${counts.embassy}</div><div class="lbl">${t("stat_embassy")}</div></div>
+    <div class="stat s-ready"><div class="num">${counts.ready}</div><div class="lbl">${t("stat_ready")}</div></div>
+    <div class="stat s-money">
+      <div class="num">${collected.toLocaleString()} ${t("currency")}</div>
+      <div class="lbl">${t("collected")}</div>
+      <div class="sub">${t("pending")}: ${pending.toLocaleString()} ${t("currency")}</div>
+    </div>`;
+}
+
+/* ================= Export ================= */
+function exportExcel(){
+  if(clients.length===0)return;
+  const rows=clients.map(c=>({
+    [t("fullName")]:c.name,
+    [t("passportNum")]:c.passport,
+    [t("phone")]:c.phone,
+    [t("status")]:t("st_"+c.status),
+    [t("passportExpiry")]:c.expiry||"",
+    [t("amount")]:c.amount,
+    [t("payStatus")]:c.paid?t("paid"):t("unpaid"),
+    [t("notes")]:c.notes
+  }));
+  if(typeof XLSX!=="undefined"){
+    const ws=XLSX.utils.json_to_sheet(rows);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Visa");
+    XLSX.writeFile(wb,"china-visa-"+new Date().toISOString().slice(0,10)+".xlsx");
+  }else{
+    // CSV fallback with BOM for Hebrew/Arabic
+    const headers=Object.keys(rows[0]);
+    const csv="\uFEFF"+[headers.join(","),...rows.map(r=>headers.map(h=>`"${String(r[h]).replace(/"/g,'""')}"`).join(","))].join("\n");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="china-visa-"+new Date().toISOString().slice(0,10)+".csv";a.click();
+  }
+  toast(t("saved"),true);
+}
+
+/* ================= Print single card ================= */
+function printClient(id){
+  const c=clients.find(x=>x.id===id); if(!c)return;
+  const idx=STATUSES.indexOf(c.status);
+  const stColors={new:"#22355A",progress:"#C99A3B",embassy:"#C1272D",ready:"#1E8E5A"};
+  let steps="";
+  STATUSES.forEach((s,i)=>{
+    if(i>0)steps+=`<div class="p-line ${i<=idx?"done":""}"></div>`;
+    steps+=`<div class="p-step ${i<=idx?"done":""} ${i===idx?"cur":""}">
+      <div class="p-dot">${i<idx?"✓":i+1}</div>
+      <div class="p-slbl">${t("st_"+s)}</div></div>`;
+  });
+  const exp=expiryInfo(c.expiry);
+  const col=stColors[c.status];
+  document.getElementById("printArea").innerHTML=`<div class="p-sheet">
+    <div class="p-head">
+      <div class="p-title">
+        <div class="p-badge">🇨🇳</div>
+        <div><h1>${t("appTitle")}</h1><p>${t("appSub")}</p></div>
+      </div>
+      <div class="p-date">${fmtDate(new Date().toISOString())}</div>
+    </div>
+    <div class="p-name-row">
+      ${c.personalPhoto?`<img class="p-photo" src="${c.personalPhoto}">`:""}
+      <div>
+        <div class="p-name">${esc(c.name)}</div>
+        <span class="p-status" style="color:${col};border-color:${col}">${t("st_"+c.status)}</span>
+      </div>
+    </div>
+    <div class="p-pipeline">${steps}</div>
+    <div class="p-grid">
+      <div class="p-field"><span>${t("passportNum")}</span><b class="ltr">${esc(c.passport||"—")}</b></div>
+      <div class="p-field"><span>${t("phone")}</span><b class="ltr">${esc(c.phone||"—")}</b></div>
+      <div class="p-field"><span>${t("passportExpiry")}</span><b>${c.expiry?fmtDate(c.expiry):"—"}${exp?" · "+exp.txt:""}</b></div>
+      <div class="p-field"><span>${t("amount")} / ${t("payStatus")}</span><b>${c.amount.toLocaleString()} ${t("currency")} · ${c.paid?t("paid"):t("unpaid")}</b></div>
+    </div>
+    ${c.notes?`<div class="p-notes"><span>${t("notes")}</span><p>${esc(c.notes)}</p></div>`:""}
+    ${c.passportPhoto?`<div class="p-passport-img"><span>${t("passportPhoto")}</span><img src="${c.passportPhoto}"></div>`:""}
+  </div>`;
+  document.body.classList.add("printing-single");
+  window.print();
+  setTimeout(()=>document.body.classList.remove("printing-single"),400);
+}
+
+/* ================= Auth / Views ================= */
+function setView(v){
+  document.body.classList.remove("view-login","view-app","view-status","view-setup");
+  document.body.classList.add("view-"+v);
+}
+function showSetup(){
+  const c=getCfg();
+  if(c){document.getElementById("su_url").value=c.url||"";document.getElementById("su_key").value=c.key||"";}
+  document.getElementById("setupErr").textContent="";
+  setView("setup");
+}
+function saveConfig(){
+  const url=document.getElementById("su_url").value.trim().replace(/\/$/,"");
+  const key=document.getElementById("su_key").value.trim();
+  if(!url||!key){document.getElementById("setupErr").textContent=t("setupErr");return;}
+  localStorage.setItem("cv_supa",JSON.stringify({url,key}));
+  initSupa();
+  setView("login");
+}
+async function doLogin(){
+  const email=document.getElementById("li_user").value.trim();
+  const pass=document.getElementById("li_pass").value;
+  const err=document.getElementById("loginErr");
+  if(!supa){showSetup();return;}
+  err.textContent=t("connecting");
+  const{error}=await supa.auth.signInWithPassword({email,password:pass});
+  if(error){err.textContent=t("loginErr");return;}
+  err.textContent="";
+  document.getElementById("li_pass").value="";
+  onAuthed();
+}
+function onAuthed(){setView("app");loadClients();}
+async function doSignup(){
+  const email=document.getElementById("su_email").value.trim();
+  const pass=document.getElementById("su_pass").value;
+  const err=document.getElementById("signupErr");
+  if(!supa){showSetup();return;}
+  if(pass.length<6){err.textContent=t("passShort");return;}
+  err.textContent=t("connecting");
+  const{data,error}=await supa.auth.signUp({email,password:pass});
+  if(error){err.textContent=error.message;return;}
+  err.textContent="";
+  if(data&&data.session){onAuthed();}          // email confirmation OFF -> straight in
+  else{alert(t("signupCheck"));setView("login");} // confirmation ON -> verify email
+}
+async function logout(){
+  if(supa)await supa.auth.signOut();
+  document.getElementById("li_pass").value="";
+  clients=[];
+  setView("login");
+}
+async function changePassword(){
+  const nu=prompt(t("passNew"));if(!nu)return;
+  const{error}=await supa.auth.updateUser({password:nu});
+  alert(error?t("passWrong"):t("passChanged"));
+}
+
+/* ================= Client status link ================= */
+function b64(s){return btoa(unescape(encodeURIComponent(s)));}
+function fromB64(s){return decodeURIComponent(escape(atob(s)));}
+function waPhone(p){
+  let d=(p||"").replace(/\D/g,"");
+  if(!d)return"";
+  if(d.startsWith("972"))return d;
+  if(d.startsWith("0"))return "972"+d.slice(1);
+  return d;
+}
+function shareStatus(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  const data={n:c.name,p:c.passport,s:c.status,l:lang,d:new Date().toISOString().slice(0,10)};
+  const link=location.href.split("#")[0]+"#s="+b64(JSON.stringify(data));
+  const msg=lang==="ar"
+    ? "مرحباً "+c.name+"، لمتابعة حالة طلب تأشيرة الصين:\n"+link
+    : "שלום "+c.name+", לצפייה בסטטוס הבקשה לויזה לסין:\n"+link;
+  try{navigator.clipboard.writeText(link);}catch(e){}
+  const ph=waPhone(c.phone);
+  if(ph){
+    window.open("https://wa.me/"+ph+"?text="+encodeURIComponent(msg),"_blank");
+    toast(t("linkCopied"),true);
+  }else{
+    toast(t("noPhone"));
+  }
+}
+function renderStatus(d){
+  window._statusData=d;
+  const idx=STATUSES.indexOf(d.s);
+  const stColors={new:"#22355A",progress:"#C99A3B",embassy:"#C1272D",ready:"#1E8E5A"};
+  let steps="";
+  STATUSES.forEach((s,i)=>{
+    if(i>0)steps+=`<div class="sp-line ${i<=idx?"done":""}"></div>`;
+    steps+=`<div class="sp-step ${i<=idx?"done":""} ${i===idx?"cur":""}">
+      <div class="sp-dot">${i<idx?"✓":i+1}</div>
+      <div class="sp-lbl">${t("st_"+s)}</div></div>`;
+  });
+  document.getElementById("statusBody").innerHTML=`
+    <div class="status-current"><span class="cur-badge" style="background:${stColors[d.s]}">${t("st_"+d.s)}</span></div>
+    <div class="status-pipe">${steps}</div>
+    <div class="status-info">
+      <div class="si-row"><span>${t("fullName")}</span><b>${esc(d.n)}</b></div>
+      <div class="si-row"><span>${t("passportNum")}</span><b class="ltr">${esc(d.p||"—")}</b></div>
+      ${d.d?`<div class="si-updated">${t("statusUpdated")}: ${fmtDate(d.d)}</div>`:""}
+    </div>`;
+}
+
+/* ================= Helpers ================= */
+function esc(s){return String(s||"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+function fmtDate(d){if(!d)return"";const dt=new Date(d);return dt.toLocaleDateString(lang==="ar"?"ar":"he",{day:"2-digit",month:"2-digit",year:"numeric"});}
+let toastTimer;
+function toast(msg,ok){
+  const el=document.getElementById("toast");
+  el.textContent=(ok?"✓ ":"")+msg;el.className="toast show"+(ok?" ok":"");
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className="toast",2400);
+}
+
+/* ================= Init ================= */
+(async function init(){
+  const h=location.hash;
+  if(h.startsWith("#s=")){
+    try{
+      const d=JSON.parse(fromB64(h.slice(3)));
+      if(d.l)lang=d.l;
+      setLang(lang);
+      setView("status");
+      renderStatus(d);
+      return;
+    }catch(e){/* fall through */}
+  }
+  setLang(lang);
+  if(!initSupa()){setView("setup");return;}
+  const{data}=await supa.auth.getSession();
+  if(data&&data.session){onAuthed();}
+  else setView("login");
+})();
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeLightbox();}});
+</script>
+</body>
+</html>
