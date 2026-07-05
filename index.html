@@ -532,6 +532,7 @@ const I18N={
     scanLoading:"טוען מנוע זיהוי...", scanning:"סורק דרכון...",
     scanDone:"זוהו פרטים — בדוק ותקן במידת הצורך",
     scanNoMrz:"לא זוהה אזור קריא. צלם ישר את עמוד הפרטים כולל 2 השורות התחתונות",
+    scanPartial:"קראתי את השם — השלם מספר דרכון ותוקף ידנית (צלם בלי בוהק לזיהוי מלא)",
     scanNoNet:"נדרש חיבור אינטרנט לסריקה", scanErr:"שגיאה בסריקה, נסה שוב"
   },
   ar:{
@@ -577,6 +578,7 @@ const I18N={
     scanLoading:"جارٍ تحميل محرك التعرّف...", scanning:"جارٍ مسح الجواز...",
     scanDone:"تم التعرّف على البيانات — يرجى المراجعة والتصحيح",
     scanNoMrz:"لم يتم التعرّف على المنطقة القابلة للقراءة. صوّر صفحة البيانات مستقيمة مع السطرين السفليين",
+    scanPartial:"تم قراءة الاسم — أكمل رقم الجواز والصلاحية يدوياً (صوّر بدون انعكاس للتعرّف الكامل)",
     scanNoNet:"يلزم اتصال بالإنترنت للمسح", scanErr:"حدث خطأ أثناء المسح، حاول مرة أخرى"
   }
 };
@@ -698,6 +700,31 @@ function updateScanBtn(){
   const btn=document.getElementById("scanBtn");
   if(btn)btn.disabled=!tmpPhotos.passport;
 }
+function loadImg(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src;});}
+function preproc(im,bandOnly,scale){
+  const W=im.naturalWidth,H=im.naturalHeight;
+  let sy=0,sh=H;
+  if(bandOnly){sy=Math.round(H*0.68);sh=H-sy;}
+  const sc=scale||Math.min(1,1600/W);
+  const cw=Math.round(W*sc),ch=Math.round(sh*sc);
+  const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+  const ctx=cv.getContext("2d");
+  ctx.drawImage(im,0,sy,W,sh,0,0,cw,ch);
+  const id=ctx.getImageData(0,0,cw,ch),px=id.data;
+  let mn=255,mx=0;
+  for(let i=0;i<px.length;i+=4){const g=px[i]*0.3+px[i+1]*0.59+px[i+2]*0.11;px[i]=px[i+1]=px[i+2]=g;if(g<mn)mn=g;if(g>mx)mx=g;}
+  const rg=Math.max(1,mx-mn);
+  for(let i=0;i<px.length;i+=4){const g=(px[i]-mn)/rg*255;px[i]=px[i+1]=px[i+2]=g;}
+  ctx.putImageData(id,0,0);
+  return cv.toDataURL("image/jpeg",0.92);
+}
+async function buildVariants(src){
+  const im=await loadImg(src);const W=im.naturalWidth;
+  return [
+    preproc(im,false,Math.min(1,1600/W)),
+    preproc(im,true,Math.min(3,Math.max(1.6,1800/W)))
+  ];
+}
 async function scanPassport(){
   if(!tmpPhotos.passport)return;
   const btn=document.getElementById("scanBtn");
@@ -719,15 +746,22 @@ async function scanPassport(){
     }
     st.textContent=t("scanning");
     const src=tmpScanSrc||tmpPhotos.passport;
-    const{data}=await tessWorker.recognize(src);
-    const mrz=parseMRZ(data.text);
+    let variants;try{variants=await buildVariants(src);}catch(e){variants=[src];}
+    let allText="",mrz=null;
+    for(const v of variants){
+      const{data}=await tessWorker.recognize(v);
+      allText+="\n"+data.text;
+      mrz=parseMRZ(allText);
+      if(mrz&&mrz.passport&&mrz.expiry)break;
+    }
     if(!mrz){st.className="scan-status err";st.textContent=t("scanNoMrz");}
     else{
       if(mrz.name)document.getElementById("f_name").value=mrz.name;
       if(mrz.passport)document.getElementById("f_passport").value=mrz.passport;
       if(mrz.expiry)document.getElementById("f_expiry").value=mrz.expiry;
       if(mrz.extra){const n=document.getElementById("f_notes");if(!n.value.trim())n.value=mrz.extra;}
-      st.className="scan-status ok";st.textContent="✓ "+t("scanDone");
+      if(mrz.partial){st.className="scan-status load";st.textContent="⚠️ "+t("scanPartial");}
+      else{st.className="scan-status ok";st.textContent="✓ "+t("scanDone");}
     }
   }catch(err){
     st.className="scan-status err";
@@ -743,34 +777,40 @@ function mrzDate(s,future){
   return year+"-"+String(mm).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
 }
 function parseMRZ(text){
-  let lines=(text||"").toUpperCase().split(/\r?\n/)
-    .map(l=>l.replace(/[^A-Z0-9<]/g,""))
-    .filter(l=>l.length>=25);
-  let cand=lines.filter(l=>l.includes("<"));
-  if(cand.length<2)cand=lines.filter(l=>l.length>=30);
-  if(cand.length<2)return null;
-  let i=cand.findIndex(l=>/^P[<A-Z0-9]/.test(l)&&l.includes("<<"));
-  let l1,l2;
-  if(i>=0&&cand[i+1]){l1=cand[i];l2=cand[i+1];}
-  else{l1=cand[cand.length-2];l2=cand[cand.length-1];}
+  const lines=(text||"").toUpperCase().split(/\r?\n/)
+    .map(l=>l.replace(/[^A-Z0-9<]/g,"")).filter(l=>l.length>=20);
   const pad=s=>(s+"<".repeat(44)).slice(0,44);
-  l1=pad(l1);l2=pad(l2);
   const norm=s=>(s||"").replace(/</g," ").trim().split(/\s+/).filter(w=>w.length>=2);
-  const nameParts=l1.slice(5).split("<<");
-  const words=[...norm(nameParts[0]),...norm(nameParts[1]||"")];
-  let name=words.map(w=>w[0]+w.slice(1).toLowerCase()).join(" ");
-  const passport=l2.slice(0,9).replace(/</g,"").trim();
-  const nat=l2.slice(10,13).replace(/</g,"");
-  const dob=mrzDate(l2.slice(13,19),false);
-  const sex=l2.slice(20,21).replace("<","");
-  const expiry=mrzDate(l2.slice(21,27),true);
-  if(!name&&!passport)return null;
-  let parts=[];
-  if(nat)parts.push(nat);
-  if(dob)parts.push("DOB "+dob);
-  if(sex&&sex!=="<")parts.push(sex);
-  const extra=parts.join(" · ");
-  return{name,passport,expiry,extra};
+  // name line (P<ISR SURNAME<<GIVEN)
+  const nameLine=lines.find(l=>/^P[<A-Z0-9]/.test(l)&&l.includes("<<"));
+  let name="";
+  if(nameLine){
+    const parts=pad(nameLine).slice(5).split("<<");
+    const words=[...norm(parts[0]),...norm(parts[1]||"")];
+    name=words.map(w=>w[0]+w.slice(1).toLowerCase()).join(" ");
+  }
+  // best data line (scan all candidates, pick the most valid one)
+  let best=null;
+  for(const l of lines){
+    if(l===nameLine)continue;
+    const p=pad(l);
+    const nat=p.slice(10,13);
+    const dob=mrzDate(p.slice(13,19),false);
+    const exp=mrzDate(p.slice(21,27),true);
+    let sc=0;
+    if(/^[A-Z]{3}$/.test(nat))sc+=3;
+    if(exp)sc+=3; if(dob)sc+=2;
+    sc+=Math.min(2,(l.match(/\d/g)||[]).length/10);
+    if(!best||sc>best.sc)best={sc,nat,dob,exp,sex:p.slice(20,21),passport:p.slice(0,9).replace(/</g,"").trim()};
+  }
+  const l2ok=best&&best.exp&&best.dob&&best.passport.length>=5;
+  if(!name&&!l2ok)return null;
+  if(!l2ok)return{name,partial:true};
+  const parts=[];
+  if(best.nat)parts.push(best.nat);
+  if(best.dob)parts.push("DOB "+best.dob);
+  if(best.sex&&best.sex!=="<")parts.push(best.sex);
+  return{name,passport:best.passport,expiry:best.exp,extra:parts.join(" · ")};
 }
 
 /* ================= Modal ================= */
