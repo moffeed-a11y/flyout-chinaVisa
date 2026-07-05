@@ -176,10 +176,16 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;background:#FCFBF8}
 
 /* lightbox */
-.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:80;display:none;align-items:center;justify-content:center;padding:30px}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:80;display:none;align-items:center;justify-content:center;padding:20px;overflow:auto}
 .lightbox.open{display:flex}
-.lightbox img{max-width:90%;max-height:90%;border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.5)}
-.lightbox .x{position:absolute;top:20px;inset-inline-end:24px;color:#fff;font-size:36px;cursor:pointer;line-height:1}
+.lightbox img{max-width:95vw;max-height:90vh;border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.5);cursor:zoom-in;transition:transform .2s;transform-origin:center}
+.lightbox img.zoomed{max-width:none;max-height:none;transform:scale(2.2);cursor:zoom-out}
+.lightbox .x{position:fixed;top:18px;inset-inline-end:22px;color:#fff;font-size:34px;cursor:pointer;line-height:1;z-index:2}
+.lb-hint{position:fixed;bottom:20px;inset-inline-start:0;right:0;text-align:center;color:#fff;font-size:13px;opacity:.75}
+/* magnifier on avatar */
+.avatar-wrap{position:relative;flex-shrink:0}
+.mag-badge{position:absolute;bottom:-5px;inset-inline-end:-5px;width:23px;height:23px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:11px;border:2px solid #fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.mag-badge:hover{background:var(--crimson)}
 
 /* toast */
 .toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(50%) translateY(120px);background:var(--navy);color:#fff;padding:13px 22px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:90;transition:.3s;display:flex;align-items:center;gap:9px}
@@ -479,7 +485,8 @@ body:not(.view-app) .wrap{display:none!important}
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <span class="x">✕</span>
-  <img id="lightboxImg" src="" alt="">
+  <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation();toggleZoom()">
+  <div class="lb-hint" data-t="lbHint">לחץ על התמונה לזום · לחץ ברקע לסגירה</div>
 </div>
 
 <div id="printArea"></div>
@@ -514,6 +521,7 @@ const I18N={
     exp_valid:"דרכון בתוקף", exp_soon:"פג בקרוב", exp_expired:"פג תוקף",
     createdOn:"נפתח", noPhoto:"אין תמונה",
     printCard:"הדפס כרטיס",
+    enlarge:"הגדל תמונה", viewPassport:"צפה בדרכון (הגדל)", lbHint:"לחץ על התמונה לזום · לחץ ברקע לסגירה",
     loginTitle:"כניסת מנהל", loginUser:"שם משתמש", loginPass:"סיסמה",
     loginBtn:"התחברות", loginErr:"שם משתמש או סיסמה שגויים",
     logout:"יציאה", passOld:"הזן סיסמה נוכחית:", passNew:"הזן סיסמה חדשה:",
@@ -560,6 +568,7 @@ const I18N={
     exp_valid:"الجواز صالح", exp_soon:"ينتهي قريباً", exp_expired:"منتهي الصلاحية",
     createdOn:"فُتح", noPhoto:"لا توجد صورة",
     printCard:"طباعة البطاقة",
+    enlarge:"تكبير الصورة", viewPassport:"عرض الجواز (تكبير)", lbHint:"اضغط على الصورة للتكبير · اضغط على الخلفية للإغلاق",
     loginTitle:"دخول المدير", loginUser:"اسم المستخدم", loginPass:"كلمة المرور",
     loginBtn:"تسجيل الدخول", loginErr:"اسم المستخدم أو كلمة المرور غير صحيحة",
     logout:"خروج", passOld:"أدخل كلمة المرور الحالية:", passNew:"أدخل كلمة المرور الجديدة:",
@@ -902,8 +911,9 @@ function togglePaid(id){
 }
 
 /* ================= Lightbox ================= */
-function openLightbox(src){document.getElementById("lightboxImg").src=src;document.getElementById("lightbox").classList.add("open");}
+function openLightbox(src){const img=document.getElementById("lightboxImg");img.classList.remove("zoomed");img.src=src;document.getElementById("lightbox").classList.add("open");}
 function closeLightbox(){document.getElementById("lightbox").classList.remove("open");}
+function toggleZoom(){document.getElementById("lightboxImg").classList.toggle("zoomed");}
 
 /* ================= Expiry check ================= */
 function expiryInfo(dateStr){
@@ -960,7 +970,7 @@ function cardHTML(c){
       <div class="bar"></div><div class="t">${t("st_"+s)}</div>
     </div>`).join("");
   const avatar=c.personalPhoto
-    ? `<img class="avatar" src="${c.personalPhoto}" onclick="openLightbox('${c.personalPhoto}')">`
+    ? `<div class="avatar-wrap"><img class="avatar" src="${c.personalPhoto}" onclick="openLightbox('${c.personalPhoto}')"><span class="mag-badge" title="${t('enlarge')}" onclick="openLightbox('${c.personalPhoto}')">🔍</span></div>`
     : `<div class="avatar ph">👤</div>`;
   const exp=expiryInfo(c.expiry);
   const advLabels=["advance_new","advance_progress","advance_embassy","advance_ready"];
@@ -968,7 +978,7 @@ function cardHTML(c){
     ? `<button class="advance ready" disabled>${t("advance_ready")}</button>`
     : `<button class="advance" onclick="advanceStatus('${c.id}')">${t(advLabels[stepIdx])}</button>`;
   const passportThumb=c.passportPhoto
-    ? `<span class="icon-btn" title="${t('passportPhoto')}" onclick="openLightbox('${c.passportPhoto}')" style="cursor:pointer">📘</span>` : "";
+    ? `<span class="icon-btn" title="${t('viewPassport')}" onclick="openLightbox('${c.passportPhoto}')" style="cursor:pointer">📘</span>` : "";
 
   return `<div class="card">
     <div class="card-top">
