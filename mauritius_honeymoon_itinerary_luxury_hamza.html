@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מסלול ירח דבש במאוריציוס</title>
+<style>
+:root {
+  --navy:#081f3b;
+  --navy2:#15395f;
+  --gold:#c99849;
+  --gold2:#e0b46d;
+  --sand:#fff8ef;
+  --cream:#fffdfa;
+  --muted:#6e7889;
+  --teal:#0d7a80;
+  --line:#ead8bc;
+  --shadow:0 24px 60px rgba(8,31,59,.14);
+}
+*{box-sizing:border-box}
+body {
+  margin:0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(201,152,73,.16), transparent 18%),
+    linear-gradient(180deg, #fff9f1 0%, #f8eddf 46%, #ffffff 100%);
+  color:var(--navy);
+}
+.hero {
+  position:relative;
+  min-height:560px;
+  overflow:hidden;
+  display:flex;
+  align-items:flex-end;
+  background:
+    linear-gradient(90deg, rgba(255,249,241,.97) 8%, rgba(255,249,241,.82) 42%, rgba(255,249,241,.12) 100%),
+    url('https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=2000&q=85') center/cover no-repeat;
+}
+.hero::after {
+  content:"";
+  position:absolute;
+  left:-5%;
+  right:-5%;
+  bottom:-70px;
+  height:140px;
+  background:#fff9f1;
+  transform:rotate(-2deg);
+}
+.hero-content {
+  position:relative;
+  z-index:1;
+  width:min(1180px,92vw);
+  margin:0 auto;
+  padding:58px 0 96px;
+}
+.brand {
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 18px;
+  border:1px solid rgba(201,152,73,.45);
+  border-radius:999px;
+  background:rgba(255,255,255,.75);
+  color:var(--gold);
+  font-weight:800;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  backdrop-filter: blur(8px);
+}
+h1 {
+  font-size:clamp(42px,7vw,82px);
+  line-height:1;
+  margin:24px 0 12px;
+}
+.subtitle {
+  font-size:clamp(18px,2.2vw,26px);
+  line-height:1.6;
+  color:#33506c;
+  max-width:760px;
+  margin:0 0 28px;
+}
+.passengers {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.passengers span {
+  background:rgba(255,255,255,.88);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:12px 18px;
+  box-shadow:0 12px 24px rgba(8,31,59,.08);
+  font-weight:700;
+}
+.container {
+  width:min(1180px,92vw);
+  margin:-52px auto 54px;
+  position:relative;
+  z-index:2;
+}
+.stats {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+  margin-bottom:28px;
+}
+.stat {
+  background:rgba(255,255,255,.88);
+  border:1px solid var(--line);
+  border-radius:26px;
+  padding:22px 24px;
+  box-shadow:var(--shadow);
+  backdrop-filter: blur(10px);
+}
+.stat strong {
+  display:block;
+  color:var(--teal);
+  font-size:28px;
+  margin-bottom:6px;
+}
+.stat span {
+  color:var(--muted);
+  font-size:14px;
+}
+.section {
+  background:rgba(255,255,255,.84);
+  border:1px solid var(--line);
+  border-radius:34px;
+  padding:30px;
+  box-shadow:var(--shadow);
+  margin-bottom:28px;
+  backdrop-filter: blur(12px);
+}
+.section-title {
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin-bottom:22px;
+}
+.section-title h2 {
+  margin:0;
+  font-size:31px;
+}
+.section-title .line {
+  flex:1;
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.route-box {
+  background:linear-gradient(135deg, #ffffff, #fff7ec);
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:26px 22px;
+}
+.route-track {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:nowrap;
+  overflow:auto;
+}
+.route-stop {
+  min-width:120px;
+  text-align:center;
+}
+.route-icon {
+  width:66px;
+  height:66px;
+  margin:0 auto 10px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:linear-gradient(135deg, var(--navy), var(--navy2));
+  color:#fff;
+  font-size:30px;
+  box-shadow:0 15px 30px rgba(8,31,59,.18);
+}
+.route-name {
+  font-weight:800;
+}
+.route-line {
+  flex:1;
+  min-width:80px;
+  height:3px;
+  background:linear-gradient(90deg, var(--gold), var(--gold2));
+  border-radius:999px;
+  position:relative;
+}
+.route-line::after {
+  content:"";
+  position:absolute;
+  left:100%;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--gold);
+  transform:translate(-50%,-50%);
+}
+.grid {
+  display:grid;
+  grid-template-columns:1.02fr 1fr;
+  gap:28px;
+}
+.list {
+  display:grid;
+  gap:18px;
+}
+.flight-card {
+  display:grid;
+  grid-template-columns:92px 1fr;
+  gap:18px;
+  direction:ltr;
+  text-align:left;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:18px;
+  box-shadow:0 14px 34px rgba(8,31,59,.08);
+}
+.flight-date {
+  background:linear-gradient(135deg, var(--navy), var(--navy2));
+  color:#fff;
+  border-radius:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:104px;
+}
+.flight-date .date {
+  font-size:23px;
+  font-weight:800;
+}
+.flight-date .day {
+  opacity:.82;
+  font-size:12px;
+}
+.flight-brand {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:10px;
+}
+.logos {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.logos img {
+  height:34px;
+  width:auto;
+  border-radius:12px;
+  box-shadow:0 8px 18px rgba(8,31,59,.08);
+}
+.brand-text {
+  margin-left:auto;
+  text-align:right;
+  direction:rtl;
+}
+.airline {
+  color:var(--gold);
+  font-weight:900;
+}
+.flight-no {
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+}
+.flight-content h3 {
+  margin:6px 0 14px;
+  font-size:20px;
+  color:var(--navy);
+}
+.time-strip {
+  display:grid;
+  grid-template-columns:1fr 64px 1fr;
+  gap:14px;
+  align-items:center;
+}
+.time-box {
+  background:#f8f2ea;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:12px 14px;
+}
+.time-box small {
+  display:block;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+.time-box strong {
+  font-size:28px;
+  color:var(--navy);
+}
+.flight-arrow {
+  text-align:center;
+  color:var(--gold);
+  font-size:28px;
+  font-weight:900;
+}
+.meta {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+.meta span {
+  background:#f6f0e7;
+  border:1px solid var(--line);
+  color:#435a72;
+  border-radius:999px;
+  padding:8px 11px;
+  font-size:12px;
+}
+.hotel-card {
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:0 14px 34px rgba(8,31,59,.08);
+}
+.hotel-image-wrap {
+  position:relative;
+}
+.hotel-card img {
+  width:100%;
+  height:240px;
+  object-fit:cover;
+  display:block;
+}
+.hotel-overlay {
+  position:absolute;
+  inset:auto 16px 16px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.hotel-overlay span {
+  background:rgba(255,255,255,.86);
+  border:1px solid rgba(255,255,255,.55);
+  backdrop-filter: blur(8px);
+  border-radius:999px;
+  padding:10px 14px;
+  font-weight:800;
+}
+.hotel-body {
+  padding:22px;
+}
+.hotel-body h3 {
+  margin:0 0 8px;
+  font-size:26px;
+}
+.dates {
+  color:var(--muted);
+  font-weight:800;
+  margin:0 0 10px;
+}
+.room {
+  color:#1f3550;
+  font-weight:700;
+  margin:0 0 6px;
+}
+.tag {
+  color:var(--gold);
+  font-weight:900;
+  margin:0 0 18px;
+}
+.hotel-links {
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.btn {
+  text-decoration:none;
+  padding:12px 18px;
+  border-radius:999px;
+  font-weight:800;
+  transition:.2s ease;
+  border:1px solid var(--gold);
+}
+.btn.gold {
+  background:linear-gradient(135deg, var(--gold), var(--gold2));
+  color:#fff;
+}
+.btn.light {
+  background:#fff;
+  color:var(--teal);
+}
+.btn:hover {
+  transform:translateY(-1px);
+  box-shadow:0 10px 20px rgba(8,31,59,.1);
+}
+.note {
+  background:linear-gradient(135deg,#fff4e5,#f4fcfc);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:18px 20px;
+  color:#42556a;
+  line-height:1.7;
+  margin-top:18px;
+}
+.highlights {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+}
+.highlight {
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:22px;
+  text-align:center;
+}
+.highlight .icon {
+  font-size:34px;
+  color:var(--gold);
+}
+.highlight h3 {
+  margin:10px 0 8px;
+}
+.highlight p {
+  margin:0;
+  color:var(--muted);
+  line-height:1.6;
+}
+.footer {
+  text-align:center;
+  padding:26px 0 54px;
+  color:#496075;
+}
+@media (max-width:980px) {
+  .stats, .highlights {grid-template-columns:repeat(2,1fr)}
+  .grid {grid-template-columns:1fr}
+}
+@media (max-width:640px) {
+  .stats, .highlights {grid-template-columns:1fr}
+  .section {padding:18px; border-radius:24px}
+  .flight-card {grid-template-columns:1fr; direction:rtl; text-align:right}
+  .flight-brand {flex-direction:column; align-items:flex-start}
+  .brand-text {margin-left:0}
+  .time-strip {grid-template-columns:1fr; gap:10px}
+  .flight-arrow {transform:rotate(90deg)}
+  .hotel-card img {height:220px}
+  .route-stop {min-width:104px}
+}
+@media print {
+  body {background:#fff}
+  .section, .stat, .flight-card, .hotel-card {box-shadow:none}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-content">
+    <div class="brand">Flyout Travel ✈</div>
+    <h1>מסלול ירח דבש במאוריציוס</h1>
+    <p class="subtitle">חופשה רומנטית בעיצוב יוקרתי, עם מסלול טיסות ברור, לוגואים של חברות התעופה, תמונות מלונות וקישורים ישירים למלון ולחדר.</p>
+    <div class="passengers"><span>Hamza Zubedat · Adult, 23 years</span><span>Mira Abdallah · Adult, 19 years</span></div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="stats">
+    <div class="stat"><strong>11/09 – 26/09</strong><span>תאריכי נסיעה כולל טיסות</span></div>
+    <div class="stat"><strong>13 לילות</strong><span>שהייה במאוריציוס</span></div>
+    <div class="stat"><strong>2 מלונות</strong><span>LUX* Grand Baie + Maradiva</span></div>
+    <div class="stat"><strong>Emirates / flydubai</strong><span>כולל לוגו ומסלול טיסה מעוצב</span></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><div class="line"></div><h2>מסלול טיסה</h2><div class="line"></div></div>
+    <div class="route-box">
+      <div class="route-track"><div class="route-stop"><div class="route-icon">🛫</div><div class="route-name">תל אביב</div></div><div class="route-line"></div><div class="route-stop"><div class="route-icon">🏙️</div><div class="route-name">דובאי</div></div><div class="route-line"></div><div class="route-stop"><div class="route-icon">🌴</div><div class="route-name">מאוריציוס</div></div><div class="route-line"></div><div class="route-stop"><div class="route-icon">🏙️</div><div class="route-name">דובאי</div></div><div class="route-line"></div><div class="route-stop"><div class="route-icon">🛬</div><div class="route-name">תל אביב</div></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><div class="line"></div><h2>טיסות ומלונות</h2><div class="line"></div></div>
+    <div class="grid">
+      <div>
+        <div class="list">
+    <article class="flight-card">
+      <div class="flight-date">
+        <div class="date">11/09</div>
+        <div class="day">Friday</div>
+      </div>
+      <div class="flight-content">
+        <div class="flight-brand">
+          <div class="logos"><img src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22220%22%20height%3D%2270%22%20viewBox%3D%220%200%20220%2070%22%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%222%22%20rx%3D%2218%22%20ry%3D%2218%22%20width%3D%22216%22%20height%3D%2266%22%20fill%3D%22%230D77B6%22/%3E%0A%20%20%3Crect%20x%3D%22112%22%20y%3D%222%22%20width%3D%22106%22%20height%3D%2266%22%20fill%3D%22%23F58220%22/%3E%0A%20%20%3Ctext%20x%3D%2272%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2224%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3Efly%3C/text%3E%0A%20%20%3Ctext%20x%3D%22153%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2224%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3Edubai%3C/text%3E%0A%3C/svg%3E%0A" alt="airline logo"><img src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22220%22%20height%3D%2270%22%20viewBox%3D%220%200%20220%2070%22%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%222%22%20rx%3D%2218%22%20ry%3D%2218%22%20width%3D%22216%22%20height%3D%2266%22%20fill%3D%22%23D71920%22/%3E%0A%20%20%3Ctext%20x%3D%22110%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3EEmirates%3C/text%3E%0A%3C/svg%3E%0A" alt="airline logo"></div>
+          <div class="brand-text">
+            <div class="airline">Emirates / Flydubai</div>
+            <div class="flight-no">EK2168</div>
+          </div>
+        </div>
+        <h3>Tel Aviv (TLV) → Dubai (DXB)</h3>
+        <div class="time-strip">
+          <div class="time-box"><small>Departure</small><strong>22:50</strong></div>
+          <div class="flight-arrow">✈</div>
+          <div class="time-box"><small>Arrival</small><strong>03:10 +1</strong></div>
+        </div>
+        <div class="meta">
+          <span>3h 20m</span>
+          <span>Boeing 737 MAX 9</span>
+          <span>Economy Flex · Meal included · Baggage included · Cabin bag included</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="flight-date">
+        <div class="date">12/09</div>
+        <div class="day">Saturday</div>
+      </div>
+      <div class="flight-content">
+        <div class="flight-brand">
+          <div class="logos"><img src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22220%22%20height%3D%2270%22%20viewBox%3D%220%200%20220%2070%22%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%222%22%20rx%3D%2218%22%20ry%3D%2218%22%20width%3D%22216%22%20height%3D%2266%22%20fill%3D%22%23D71920%22/%3E%0A%20%20%3Ctext%20x%3D%22110%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3EEmirates%3C/text%3E%0A%3C/svg%3E%0A" alt="airline logo"></div>
+          <div class="brand-text">
+            <div class="airline">Emirates</div>
+            <div class="flight-no">EK709</div>
+          </div>
+        </div>
+        <h3>Dubai (DXB) → Mauritius (MRU)</h3>
+        <div class="time-strip">
+          <div class="time-box"><small>Departure</small><strong>07:55</strong></div>
+          <div class="flight-arrow">✈</div>
+          <div class="time-box"><small>Arrival</small><strong>14:30</strong></div>
+        </div>
+        <div class="meta">
+          <span>6h 35m</span>
+          <span>Boeing 777-200LR</span>
+          <span>Layover in Dubai: 4h 45m · Meal included · Baggage included</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="flight-date">
+        <div class="date">25/09</div>
+        <div class="day">Friday</div>
+      </div>
+      <div class="flight-content">
+        <div class="flight-brand">
+          <div class="logos"><img src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22220%22%20height%3D%2270%22%20viewBox%3D%220%200%20220%2070%22%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%222%22%20rx%3D%2218%22%20ry%3D%2218%22%20width%3D%22216%22%20height%3D%2266%22%20fill%3D%22%23D71920%22/%3E%0A%20%20%3Ctext%20x%3D%22110%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3EEmirates%3C/text%3E%0A%3C/svg%3E%0A" alt="airline logo"></div>
+          <div class="brand-text">
+            <div class="airline">Emirates</div>
+            <div class="flight-no">EK704</div>
+          </div>
+        </div>
+        <h3>Mauritius (MRU) → Dubai (DXB)</h3>
+        <div class="time-strip">
+          <div class="time-box"><small>Departure</small><strong>21:50</strong></div>
+          <div class="flight-arrow">✈</div>
+          <div class="time-box"><small>Arrival</small><strong>04:25 +1</strong></div>
+        </div>
+        <div class="meta">
+          <span>6h 35m</span>
+          <span>Airbus A380-800</span>
+          <span>Economy Flex · Meal included · Baggage included · Cabin bag included</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="flight-date">
+        <div class="date">26/09</div>
+        <div class="day">Saturday</div>
+      </div>
+      <div class="flight-content">
+        <div class="flight-brand">
+          <div class="logos"><img src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22220%22%20height%3D%2270%22%20viewBox%3D%220%200%20220%2070%22%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%222%22%20rx%3D%2218%22%20ry%3D%2218%22%20width%3D%22216%22%20height%3D%2266%22%20fill%3D%22%23D71920%22/%3E%0A%20%20%3Ctext%20x%3D%22110%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3EEmirates%3C/text%3E%0A%3C/svg%3E%0A" alt="airline logo"><img src="data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22220%22%20height%3D%2270%22%20viewBox%3D%220%200%20220%2070%22%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%222%22%20rx%3D%2218%22%20ry%3D%2218%22%20width%3D%22216%22%20height%3D%2266%22%20fill%3D%22%230D77B6%22/%3E%0A%20%20%3Crect%20x%3D%22112%22%20y%3D%222%22%20width%3D%22106%22%20height%3D%2266%22%20fill%3D%22%23F58220%22/%3E%0A%20%20%3Ctext%20x%3D%2272%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2224%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3Efly%3C/text%3E%0A%20%20%3Ctext%20x%3D%22153%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2224%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3Edubai%3C/text%3E%0A%3C/svg%3E%0A" alt="airline logo"></div>
+          <div class="brand-text">
+            <div class="airline">Emirates / Flydubai</div>
+            <div class="flight-no">EK2120</div>
+          </div>
+        </div>
+        <h3>Dubai (DXB) → Tel Aviv (TLV)</h3>
+        <div class="time-strip">
+          <div class="time-box"><small>Departure</small><strong>06:15</strong></div>
+          <div class="flight-arrow">✈</div>
+          <div class="time-box"><small>Arrival</small><strong>08:45</strong></div>
+        </div>
+        <div class="meta">
+          <span>3h 30m</span>
+          <span>Boeing 737 MAX 9</span>
+          <span>Layover in Dubai: 1h 50m · Meal included · Baggage included</span>
+        </div>
+      </div>
+    </article>
+    </div>
+      </div>
+      <div>
+        <div class="list">
+    <article class="hotel-card">
+      <div class="hotel-image-wrap">
+        <img src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=85" alt="LUX* Grand Baie Resort & Residences">
+        <div class="hotel-overlay">
+          <span class="dest">Mauritius</span>
+          <span class="nights">7 לילות</span>
+        </div>
+      </div>
+      <div class="hotel-body">
+        <h3>LUX* Grand Baie Resort & Residences</h3>
+        <p class="dates">12/09/2026 – 19/09/2026</p>
+        <p class="room">Junior Suite - Honeymoon</p>
+        <p class="tag">שהייה רומנטית יוקרתית באזור Grand Baie</p>
+        <div class="hotel-links">
+          <a class="btn gold" href="https://www.luxresorts.com/en/mauritius/hotel/luxgrandbaie" target="_blank" rel="noopener">קישור למלון</a>
+          <a class="btn light" href="https://www.luxresorts.com/en/mauritius/hotel/luxgrandbaie/suites-villas/lux-junior-suites" target="_blank" rel="noopener">קישור לחדר</a>
+        </div>
+      </div>
+    </article>
+    
+    <article class="hotel-card">
+      <div class="hotel-image-wrap">
+        <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=85" alt="Maradiva Villas Resort & Spa">
+        <div class="hotel-overlay">
+          <span class="dest">Mauritius</span>
+          <span class="nights">6 לילות</span>
+        </div>
+      </div>
+      <div class="hotel-body">
+        <h3>Maradiva Villas Resort & Spa</h3>
+        <p class="dates">19/09/2026 – 25/09/2026</p>
+        <p class="room">Luxury Suite Villa - Private Pool</p>
+        <p class="tag">וילה פרטית עם בריכה לחוויית ירח דבש מפנקת</p>
+        <div class="hotel-links">
+          <a class="btn gold" href="https://maradiva.com/" target="_blank" rel="noopener">קישור למלון</a>
+          <a class="btn light" href="https://maradiva.com/villas/luxury-pool-villa/" target="_blank" rel="noopener">קישור לחדר</a>
+        </div>
+      </div>
+    </article>
+    </div>
+      </div>
+    </div>
+    <div class="note"><strong>עודכן במיוחד:</strong> הדף עוצב מחדש בסגנון יוקרתי, עם תמונות גדולות, כרטיסי טיסה מעוצבים, מסלול טיסה ויזואלי ולוגואים של Emirates ו-flydubai.</div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><div class="line"></div><h2>למה זה מושלם לירח דבש</h2><div class="line"></div></div>
+    <div class="highlights">
+      <div class="highlight"><div class="icon">♡</div><h3>רומנטיקה</h3><p>שילוב של חופים, סוויטות וחוויית נופש יוקרתית לזוג.</p></div>
+      <div class="highlight"><div class="icon">🏝️</div><h3>יעד מושלם</h3><p>מאוריציוס מציעה נופים טרופיים, ים צלול ושקט אמיתי.</p></div>
+      <div class="highlight"><div class="icon">🛎️</div><h3>מלונות יוקרה</h3><p>שני ריזורטים מפנקים עם אווירת ירח דבש וחוויית שירות גבוהה.</p></div>
+      <div class="highlight"><div class="icon">✈</div><h3>מסלול מסודר</h3><p>טיסות ברורות דרך דובאי עם מידע נוח ונגיש ללקוח.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <strong>Flyout Travel</strong><br>
+  Travel Beyond. Live the Moment.
+</footer>
+</body>
+</html>
