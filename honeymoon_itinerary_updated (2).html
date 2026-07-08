@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מסלול ירח דבש - מאוריציוס, סיישל ודובאי</title>
+<style>
+:root {
+  --navy:#09233f;
+  --teal:#006775;
+  --gold:#c99548;
+  --sand:#fbf3e8;
+  --cream:#fffaf3;
+  --muted:#6f7785;
+  --line:#ead9bf;
+  --shadow:0 20px 55px rgba(9,35,63,.13);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color:var(--navy);
+  background:
+    radial-gradient(circle at 10% 5%, rgba(201,149,72,.14), transparent 30%),
+    linear-gradient(180deg,#fffaf4 0%,#f8efe3 45%,#fff 100%);
+}
+.hero{
+  min-height:440px;
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(255,250,243,.96) 0%,rgba(255,250,243,.84) 42%,rgba(255,250,243,.28) 100%),
+    url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=85') center/cover;
+}
+.hero:before{
+  content:"";
+  position:absolute;
+  inset:auto -10% -30% -10%;
+  height:55%;
+  background:#fffaf3;
+  transform:rotate(-2deg);
+  transform-origin:right bottom;
+}
+.hero-content{
+  position:relative;
+  width:min(1180px,92vw);
+  margin:0 auto;
+  padding:56px 0 78px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--gold);
+  font-size:22px;
+  letter-spacing:5px;
+  text-transform:uppercase;
+  margin-bottom:24px;
+}
+.brand .plane{font-size:28px}
+h1{
+  font-size:clamp(38px,6vw,74px);
+  line-height:1.02;
+  margin:0 0 18px;
+  color:#10233d;
+  max-width:780px;
+}
+.subtitle{
+  font-size:clamp(18px,2.2vw,26px);
+  color:#35506a;
+  margin:0 0 28px;
+  max-width:720px;
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-top:34px;
+}
+.stat{
+  background:rgba(255,255,255,.86);
+  border:1px solid rgba(234,217,191,.95);
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 10px 28px rgba(9,35,63,.08);
+  backdrop-filter:blur(8px);
+}
+.stat strong{
+  display:block;
+  font-size:26px;
+  color:var(--teal);
+}
+.stat span{color:var(--muted);font-size:14px}
+.wrapper{
+  width:min(1180px,92vw);
+  margin:-44px auto 48px;
+  position:relative;
+}
+.route-strip{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:white;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:20px 26px;
+  box-shadow:var(--shadow);
+  margin-bottom:28px;
+}
+.route-city{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:110px;
+  font-weight:700;
+}
+.route-city .icon{font-size:30px;margin-bottom:6px;color:var(--teal)}
+.arrow{color:var(--gold);font-size:24px}
+.section{
+  background:rgba(255,255,255,.78);
+  border:1px solid var(--line);
+  border-radius:30px;
+  box-shadow:var(--shadow);
+  padding:28px;
+  margin-bottom:28px;
+}
+.section-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:22px;
+}
+.section-title h2{
+  margin:0;
+  font-size:30px;
+}
+.section-title span{
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  flex:1;
+}
+.layout{
+  display:grid;
+  grid-template-columns:1fr 1.05fr;
+  gap:28px;
+  align-items:start;
+}
+.flight-list,.hotel-list{
+  display:grid;
+  gap:16px;
+}
+.flight-card{
+  display:grid;
+  grid-template-columns:90px 1fr;
+  gap:18px;
+  direction:ltr;
+  text-align:left;
+  background:white;
+  border:1px solid #e8e0d6;
+  border-radius:24px;
+  padding:16px;
+  box-shadow:0 12px 28px rgba(9,35,63,.06);
+}
+.date-badge{
+  background:var(--navy);
+  color:white;
+  border-radius:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:90px;
+}
+.date-badge strong{font-size:22px}
+.date-badge span{font-size:13px;opacity:.8}
+.flight-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:var(--gold);
+  font-weight:800;
+  margin-bottom:6px;
+}
+.flight-main h3{
+  margin:6px 0 12px;
+  font-size:20px;
+  color:var(--navy);
+}
+.time-row{
+  display:grid;
+  grid-template-columns:90px 1fr 90px;
+  align-items:center;
+  gap:14px;
+  font-size:30px;
+  font-weight:800;
+}
+.line{
+  text-align:center;
+  color:var(--gold);
+  border-bottom:2px dashed #d4bd98;
+  line-height:0;
+}
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+.meta span{
+  background:#f6f0e7;
+  border:1px solid #ead9bf;
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:12px;
+  color:#45576a;
+}
+.hotel-card{
+  display:grid;
+  grid-template-columns:190px 1fr;
+  gap:18px;
+  background:white;
+  border:1px solid #e8e0d6;
+  border-radius:24px;
+  padding:14px;
+  box-shadow:0 12px 28px rgba(9,35,63,.06);
+  overflow:hidden;
+}
+.hotel-card img{
+  width:100%;
+  height:148px;
+  object-fit:cover;
+  border-radius:18px;
+}
+.hotel-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+.pill{
+  display:inline-block;
+  background:#edf7f7;
+  color:var(--teal);
+  border-radius:999px;
+  padding:6px 11px;
+  font-weight:700;
+  font-size:13px;
+}
+.nights{
+  background:#fff0d8;
+  color:#8d5f21;
+  border-radius:999px;
+  padding:6px 11px;
+  font-weight:800;
+  font-size:13px;
+}
+.hotel-info h3{
+  margin:0 0 8px;
+  font-size:21px;
+}
+.dates,.room,.tagline{margin:6px 0}
+.dates{color:var(--muted);font-weight:700}
+.room{color:#26394d}
+.tagline{color:var(--gold);font-weight:800}
+.note{
+  background:linear-gradient(135deg,#fff6e8,#eef9f9);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:18px 22px;
+  color:#3b5065;
+  line-height:1.7;
+  margin-top:18px;
+}
+.features{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+}
+.feature{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:22px;
+  text-align:center;
+}
+.feature .ico{font-size:34px;color:var(--gold)}
+.feature h3{margin:10px 0 8px}
+.feature p{margin:0;color:var(--muted);line-height:1.55}
+.footer{
+  text-align:center;
+  padding:28px 0 50px;
+  color:#496075;
+}
+.cta-row{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-top:18px;
+}
+.cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:180px;
+  padding:14px 22px;
+  border-radius:999px;
+  text-decoration:none;
+  font-weight:800;
+  border:1px solid var(--gold);
+}
+.cta.primary{background:var(--gold);color:white}
+.cta.secondary{background:white;color:var(--teal)}
+@media (max-width:900px){
+  .hero-grid,.features{grid-template-columns:repeat(2,1fr)}
+  .layout{grid-template-columns:1fr}
+  .route-strip{overflow:auto;justify-content:flex-start}
+}
+@media (max-width:620px){
+  .hero-content{padding-top:38px}
+  .hero-grid,.features{grid-template-columns:1fr}
+  .section{padding:18px;border-radius:24px}
+  .flight-card{grid-template-columns:1fr;direction:rtl;text-align:right}
+  .time-row{grid-template-columns:1fr auto 1fr;font-size:24px;direction:ltr}
+  .hotel-card{grid-template-columns:1fr}
+  .hotel-card img{height:190px}
+  .route-city{min-width:95px}
+}
+@media print{
+  body{background:white}
+  .hero{min-height:360px}
+  .wrapper{width:96vw}
+  .section,.stat,.route-strip,.flight-card,.hotel-card{box-shadow:none}
+  .cta-row{display:none}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-content">
+    <div class="brand"><span class="plane">✈</span><span>Flyout Travel</span></div>
+    <h1>מסלול ירח דבש יוקרתי</h1>
+    <p class="subtitle">מאוריציוס, סיישל ודובאי במסלול רומנטי המשלב מלונות יוקרה, חופים טרופיים וטיסות נוחות.</p>
+    <div class="hero-grid">
+      <div class="stat"><strong>03/08 - 19/08</strong><span>תאריכי נסיעה</span></div>
+      <div class="stat"><strong>15 לילות</strong><span>מלונות לאורך המסלול</span></div>
+      <div class="stat"><strong>3 יעדים</strong><span>Mauritius · Seychelles · Dubai</span></div>
+      <div class="stat"><strong>Emirates</strong><span>כולל Air Seychelles</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrapper">
+  <section class="route-strip" aria-label="route">
+    <div class="route-city"><span class="icon">🛫</span>תל אביב</div>
+    <span class="arrow">←</span>
+    <div class="route-city"><span class="icon">🏙️</span>דובאי</div>
+    <span class="arrow">←</span>
+    <div class="route-city"><span class="icon">🌴</span>מאוריציוס</div>
+    <span class="arrow">←</span>
+    <div class="route-city"><span class="icon">🐢</span>סיישל</div>
+    <span class="arrow">←</span>
+    <div class="route-city"><span class="icon">🏙️</span>דובאי</div>
+    <span class="arrow">←</span>
+    <div class="route-city"><span class="icon">🛬</span>תל אביב</div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><span></span><h2>פרטי טיסות ומלונות</h2><span></span></div>
+    <div class="layout">
+      <div>
+        <div class="section-title" style="margin-bottom:14px"><span></span><h2 style="font-size:24px">טיסות</h2><span></span></div>
+        <div class="flight-list">
+          
+    <article class="flight-card">
+      <div class="date-badge">
+        <strong>03/08</strong>
+        <span>2026</span>
+      </div>
+      <div class="flight-main">
+        <div class="flight-head">
+          <span class="airline">Emirates / Flydubai</span>
+          <span class="flight-no">EK2449</span>
+        </div>
+        <h3>Tel Aviv (TLV) → Dubai (DXB)</h3>
+        <div class="time-row">
+          <span>15:50</span>
+          <span class="line">✈</span>
+          <span>20:05</span>
+        </div>
+        <div class="meta">
+          <span>משך: 3h 15m</span>
+          <span>Boeing 737-800</span>
+          <span>כבודה וארוחה כלולות</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="date-badge">
+        <strong>04/08</strong>
+        <span>2026</span>
+      </div>
+      <div class="flight-main">
+        <div class="flight-head">
+          <span class="airline">Emirates</span>
+          <span class="flight-no">EK701</span>
+        </div>
+        <h3>Dubai (DXB) → Mauritius (MRU)</h3>
+        <div class="time-row">
+          <span>02:50</span>
+          <span class="line">✈</span>
+          <span>09:25</span>
+        </div>
+        <div class="meta">
+          <span>משך: 6h 35m</span>
+          <span>Airbus A380-800</span>
+          <span>קונקשן בדובאי: 6h 45m</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="date-badge">
+        <strong>17/08</strong>
+        <span>2026</span>
+      </div>
+      <div class="flight-main">
+        <div class="flight-head">
+          <span class="airline">Air Seychelles</span>
+          <span class="flight-no">HM / Air Seychelles</span>
+        </div>
+        <h3>Mauritius (MRU) → Seychelles (SEZ)</h3>
+        <div class="time-row">
+          <span>16:55</span>
+          <span class="line">✈</span>
+          <span>19:30</span>
+        </div>
+        <div class="meta">
+          <span>משך: 2h 35m</span>
+          <span>Direct flight</span>
+          <span>טיסה ישירה</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="date-badge">
+        <strong>17/08</strong>
+        <span>2026</span>
+      </div>
+      <div class="flight-main">
+        <div class="flight-head">
+          <span class="airline">Emirates</span>
+          <span class="flight-no">EK706</span>
+        </div>
+        <h3>Seychelles (SEZ) → Dubai (DXB)</h3>
+        <div class="time-row">
+          <span>08:25</span>
+          <span class="line">✈</span>
+          <span>12:55</span>
+        </div>
+        <div class="meta">
+          <span>משך: 4h 30m</span>
+          <span>Boeing 777-300ER</span>
+          <span>כבודה וארוחה כלולות</span>
+        </div>
+      </div>
+    </article>
+    
+    <article class="flight-card">
+      <div class="date-badge">
+        <strong>19/08</strong>
+        <span>2026</span>
+      </div>
+      <div class="flight-main">
+        <div class="flight-head">
+          <span class="airline">Emirates / Flydubai</span>
+          <span class="flight-no">EK2167</span>
+        </div>
+        <h3>Dubai (DXB) → Tel Aviv (TLV)</h3>
+        <div class="time-row">
+          <span>19:10</span>
+          <span class="line">✈</span>
+          <span>21:40</span>
+        </div>
+        <div class="meta">
+          <span>משך: 3h 30m</span>
+          <span>Boeing 737 MAX 8</span>
+          <span>כבודה וארוחה כלולות</span>
+        </div>
+      </div>
+    </article>
+    
+        </div>
+      </div>
+      <div>
+        <div class="section-title" style="margin-bottom:14px"><span></span><h2 style="font-size:24px">מלונות</h2><span></span></div>
+        <div class="hotel-list">
+          
+    <article class="hotel-card">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80" alt="Mauritius">
+      <div class="hotel-info">
+        <div class="hotel-top">
+          <span class="pill">Mauritius</span>
+          <span class="nights">2 לילות</span>
+        </div>
+        <h3>The Oberoi Beach Resort Mauritius</h3>
+        <p class="dates">04/08/2026 - 06/08/2026</p>
+        <p class="room">Premier Villa Ocean View with Private Pool</p>
+        <p class="tagline">וילה פרטית עם בריכה</p>
+      </div>
+    </article>
+    
+    <article class="hotel-card">
+      <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=900&q=80" alt="Mauritius">
+      <div class="hotel-info">
+        <div class="hotel-top">
+          <span class="pill">Mauritius</span>
+          <span class="nights">4 לילות</span>
+        </div>
+        <h3>Riu Creole All Inclusive</h3>
+        <p class="dates">06/08/2026 - 10/08/2026</p>
+        <p class="room">Junior Suite</p>
+        <p class="tagline">ריזורט הכל כלול</p>
+      </div>
+    </article>
+    
+    <article class="hotel-card">
+      <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=900&q=80" alt="Mauritius">
+      <div class="hotel-info">
+        <div class="hotel-top">
+          <span class="pill">Mauritius</span>
+          <span class="nights">3 לילות</span>
+        </div>
+        <h3>Lux Grand Baie Resort &amp; Residences</h3>
+        <p class="dates">10/08/2026 - 13/08/2026</p>
+        <p class="room">Ocean Junior Suite</p>
+        <p class="tagline">יוקרה על הים</p>
+      </div>
+    </article>
+    
+    <article class="hotel-card">
+      <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=900&q=80" alt="Seychelles">
+      <div class="hotel-info">
+        <div class="hotel-top">
+          <span class="pill">Seychelles</span>
+          <span class="nights">4 לילות</span>
+        </div>
+        <h3>Constance Ephelia</h3>
+        <p class="dates">13/08/2026 - 17/08/2026</p>
+        <p class="room">Junior Suite</p>
+        <p class="tagline">חופים וטבע בסיישל</p>
+      </div>
+    </article>
+    
+    <article class="hotel-card">
+      <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=80" alt="Dubai">
+      <div class="hotel-info">
+        <div class="hotel-top">
+          <span class="pill">Dubai</span>
+          <span class="nights">2 לילות</span>
+        </div>
+        <h3>Banyan Tree Dubai</h3>
+        <p class="dates">17/08/2026 - 19/08/2026</p>
+        <p class="room">Bliss Room with Private Balcony</p>
+        <p class="tagline">סיום יוקרתי בדובאי</p>
+      </div>
+    </article>
+    
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>הערת בדיקה:</strong>
+      לפי רשימת המלונות, השהייה בסיישל מתחילה ב-13/08 במלון Constance Ephelia. לפי צילום הטיסה ששלחת, טיסת Mauritius → Seychelles מופיעה בתאריך 17/08.
+      לכן מומלץ לוודא אם טיסת מאוריציוס לסיישל צריכה להיות ב-13/08, או אם יש שינוי בתאריכי המלון.
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><span></span><h2>חוויית ירח דבש מושלמת</h2><span></span></div>
+    <div class="features">
+      <div class="feature"><div class="ico">♡</div><h3>רומנטיקה ופרטיות</h3><p>מלונות יוקרה וחדרים משודרגים לאווירת ירח דבש מושלמת.</p></div>
+      <div class="feature"><div class="ico">🌊</div><h3>חופים טרופיים</h3><p>מאוריציוס וסיישל משלבות נופים, לגונות וחופים מהיפים בעולם.</p></div>
+      <div class="feature"><div class="ico">🧳</div><h3>מסלול מתוכנן</h3><p>חלוקה נוחה בין יעדים, מלונות וטיסות בינלאומיות.</p></div>
+      <div class="feature"><div class="ico">✨</div><h3>שירות אישי</h3><p>אפשר להוסיף העברות, אטרקציות, שדרוגים והפתעות לזוג.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <strong>Flyout Travel</strong>
+  <div>Travel Beyond. Live the Moment.</div>
+  <div class="cta-row">
+    <a class="cta primary" href="#">המשך הזמנה</a>
+    <a class="cta secondary" href="#">פרטים נוספים</a>
+  </div>
+</footer>
+</body>
+</html>
